@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>bluerov2common</name>
+  <description>basic utility</description>
+
+  <version>0.0.11</version>
+  <license>BSD</license>
+  <author>Tim Hansen</author>
+  <maintainer email="t.hansen@jacobs-university.de">Tim Hansen</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rosconsole</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roscpp_serialization</build_depend>
+  <build_depend>rostime</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <depend>image_transport</depend>
+
+</package>
