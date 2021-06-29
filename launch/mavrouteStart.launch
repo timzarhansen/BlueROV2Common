@@ -1,0 +1,4 @@
+<launch>
+    <node name="foo" pkg="bluerov2common" type="bashScripts/mavrouteStart.sh" />
+</launch>
+
