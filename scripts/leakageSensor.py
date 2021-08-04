@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from time import sleep           # Allows us to call the sleep function to slow down our loop
+from time import sleep           # Allows us to call the sleep function to slow down our loop test
 import RPi.GPIO as GPIO           # Allows us to call our GPIO pins and names it just GPIO
 
 GPIO.setmode(GPIO.BCM)           # Set's GPIO pins to BCM GPIO numbering
