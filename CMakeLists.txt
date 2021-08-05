@@ -10,7 +10,7 @@ project(bluerov2common)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp )
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation)
 find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 
 ## System dependencies are found with CMake's conventions
@@ -48,11 +48,12 @@ find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
+add_message_files(
+    FILES
+    leakageDetection.msg
 #   Message1.msg
 #   Message2.msg
-# )
+)
 #add_message_files(DIRECTORY msg FILES Num.msg)
 
 
@@ -73,10 +74,10 @@ find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+)
 #generate_messages(DEPENDENCIES std_msgs)
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -108,7 +109,8 @@ find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS
+    INCLUDE_DIRS
+    CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
