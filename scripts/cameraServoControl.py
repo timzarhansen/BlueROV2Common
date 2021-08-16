@@ -25,7 +25,7 @@ def SetAngle(angle):
     p.ChangeDutyCycle(0)
 
 try:
-    SetAngle(30)
+    SetAngle(90)
 
 except KeyboardInterrupt:
     pass
