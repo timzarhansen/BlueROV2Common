@@ -16,10 +16,8 @@ p.start(0)
 
 try:
     while 1:
-        for i in range(0,10,1):
-            p.ChangeDutyCycle(i)
-            print(i)
-            time.sleep(2)
+        p.ChangeDutyCycle(4+5.0/2.0)
+        time.sleep(2)
 
 except KeyboardInterrupt:
     pass
