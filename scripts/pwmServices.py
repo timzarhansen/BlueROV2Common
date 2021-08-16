@@ -7,13 +7,16 @@ LEDPin = 23
 
 def initGPIOPins():
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(servoPin, GPIO.OUT)  # servo Pin
+
+
     GPIO.setup(LEDPin, GPIO.OUT)  # light Pin
     gpioPinLight = GPIO.PWM(LEDPin, 50)  # frequency=50Hz
     gpioPinLight.start(0)
 
-    gpioPinLight = GPIO.PWM(servoPin, 50)  # frequency=50Hz
-    gpioPinLight.start(0)
+    GPIO.setup(servoPin, GPIO.OUT)  # servo Pin
+    gpioPinServo = GPIO.PWM(servoPin, 50)  # frequency=50Hz
+    gpioPinServo.start(0)
+
     return [gpioPinLight, gpioPinServo]
 
 
