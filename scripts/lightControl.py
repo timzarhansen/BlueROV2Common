@@ -1,30 +1,28 @@
 import time
 import RPi.GPIO as GPIO
+
+
+
+
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)
 
 p = GPIO.PWM(23, 50)  # frequency=50Hz
 p.start(0)
+
+
+def makeStrength0To10(strength):
+    p.ChangeDutyCycle(5.0+strength/10.0)
+
+
 try:
     while 1:
-        p.ChangeDutyCycle(5)
-        print("5")
-        time.sleep(1)
-        p.ChangeDutyCycle(6)
-        print("6")
-        time.sleep(1)
-        p.ChangeDutyCycle(7)
-        print("7")
-        time.sleep(1)
-        p.ChangeDutyCycle(8)
-        print("8")
-        time.sleep(1)
-        p.ChangeDutyCycle(9)
-        print("9")
-        time.sleep(1)
-        p.ChangeDutyCycle(10)
-        print("10")
-        time.sleep(1)
+        for i in range(0,100,2):
+            makeStrength0To10(i)
+            print(i)
+            time.sleep(0.5)
+
 except KeyboardInterrupt:
     pass
     p.stop()
