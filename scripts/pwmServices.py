@@ -2,65 +2,61 @@ from bluerov2common.srv import *
 import rospy
 import RPi.GPIO as GPIO
 import time
-servoPin = 12
-LEDPin = 23
-
-def initGPIOPins():
-    GPIO.setmode(GPIO.BCM)
 
 
-    GPIO.setup(LEDPin, GPIO.OUT)  # light Pin
-    gpioPinLight = GPIO.PWM(LEDPin, 50)  # frequency=50Hz
-    gpioPinLight.start(0)
+class pwmClass:
+    servoPin = 12
+    LEDPin = 23
+    gpioPinServo = None
+    gpioPinLight = None
 
-    GPIO.setup(servoPin, GPIO.OUT)  # servo Pin
-    gpioPinServo = GPIO.PWM(servoPin, 50)  # frequency=50Hz
-    gpioPinServo.start(0)
+    def initGPIOPins(self):
+        GPIO.setmode(GPIO.BCM)
 
-    return [gpioPinLight, gpioPinServo]
+        GPIO.setup(self.LEDPin, GPIO.OUT)  # light Pin
+        self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
+        self.gpioPinLight.start(0)
 
+        GPIO.setup(self.servoPin, GPIO.OUT)  # servo Pin
+        self.gpioPinServo = GPIO.PWM(self.servoPin, 50)  # frequency=50Hz
+        self.gpioPinServo.start(0)
 
-def handleLight(req, gpioPin):
-    # start correct lightning
-    gpioPin.ChangeDutyCycle(5.0 + req.intensity / 2.5)
-    return lightDensity0to10Response(True)
+    def handleLight(self, req):
+        # start correct lightning
+        self.gpioPinLight.ChangeDutyCycle(5.0 + req.intensity / 2.5)
+        return lightDensity0to10Response(True)
 
-def handleAngleServo(req,gpioPin):
+    def handleAngleServo(self, req):
+        duty = req.angle / 32 + 4
+        GPIO.output(self.servoPin, True)
+        self.gpioPinServo.ChangeDutyCycle(duty)
 
-    duty = req.angle / 32 + 4
-    GPIO.output(servoPin, True)
-    gpioPin.ChangeDutyCycle(duty)
+        time.sleep(1)
 
-    time.sleep(1)
+        GPIO.output(self.servoPin, False)
 
-    GPIO.output(servoPin, False)
+        self.gpioPinServo.ChangeDutyCycle(0)
+        return cameraAngleResponse(True)
 
-    gpioPin.ChangeDutyCycle(0)
-    return cameraAngleResponse(True)
+    def startLightLEDServer(self):
+        s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, self.handleLight)
 
-def startLightLEDServer(gpioPin):
-    s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, lambda msg: handleLight(msg, gpioPin))
+    def startServoCameraServer(self):
+        s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, self.handleAngleServo)
 
-def startServoCameraServer(gpioPin):
-    s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, lambda msg: handleAngleServo(msg, gpioPin))
-
-def shutdownHook(gpioPinLight,gpioPinServo):
-    gpioPinLight.stop()
-    gpioPinServo.stop()
-    GPIO.cleanup()
-
+    def shutdownHook(self):
+        self.gpioPinLight.stop()
+        self.gpioPinServo.stop()
+        GPIO.cleanup()
 
 
 if __name__ == "__main__":
-
-    [gpioPinLight, gpioPinServo] = initGPIOPins()
+    myPwmClass = pwmClass()
+    myPwmClass.initGPIOPins()
     rospy.init_node('pwmSignalServer')
 
-    startLightLEDServer(gpioPinLight)
-    startServoCameraServer(gpioPinServo)
+    myPwmClass.startLightLEDServer()
+    myPwmClass.startServoCameraServer()
 
-
-
-    rospy.on_shutdown(shutdownHook,[gpioPinLight,gpioPinServo])
+    rospy.on_shutdown(myPwmClass.shutdownHook)
     rospy.spin()
-
