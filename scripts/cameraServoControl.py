@@ -12,13 +12,20 @@ p = GPIO.PWM(12, 50)  # frequency=50Hz
 p.start(0)
 
 
+def SetAngle(angle):
 
+    duty = angle / 18 + 2
+    GPIO.output(12, True)
+    p.ChangeDutyCycle(duty)
+
+    time.sleep(2)
+
+    GPIO.output(12, False)
+
+    p.ChangeDutyCycle(0)
 
 try:
-    p.ChangeDutyCycle(4+5.0/2.0)
-    while 1:
-
-        time.sleep(2)
+    SetAngle(0)
 
 except KeyboardInterrupt:
     pass
