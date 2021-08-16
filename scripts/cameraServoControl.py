@@ -16,7 +16,7 @@ p.start(0)
 
 try:
     while 1:
-        for i in range(0,100,2):
+        for i in range(0,10,1):
             p.ChangeDutyCycle(i)
             print(i)
             time.sleep(2)
