@@ -16,7 +16,7 @@ def makeStrength0To10(strength):
     GPIO.output(23, True)
     p.ChangeDutyCycle(5.0+strength/2.5)
     time.sleep(0.2)
-    GPIO.output(12, False)
+    GPIO.output(23, False)
     p.ChangeDutyCycle(0)
 
 try:
