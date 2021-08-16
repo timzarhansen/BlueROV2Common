@@ -7,6 +7,7 @@ p = GPIO.PWM(23, 50)  # frequency=50Hz
 p.start(0)
 try:
     while 1:
+        print("starting Light")
         p.ChangeDutyCycle(1)
         time.sleep(0.5)
         p.ChangeDutyCycle(2)
