@@ -9,12 +9,12 @@ def initGPIOPins():
     GPIO.setmode(GPIO.BCM)
 
 
-    GPIO.setup(LEDPin, GPIO.OUT)  # light Pin
-    gpioPinLight = GPIO.PWM(LEDPin, 50)  # frequency=50Hz
+    GPIO.setup(23, GPIO.OUT)  # light Pin
+    gpioPinLight = GPIO.PWM(23, 50)  # frequency=50Hz
     gpioPinLight.start(0)
 
-    GPIO.setup(servoPin, GPIO.OUT)  # servo Pin
-    gpioPinServo = GPIO.PWM(servoPin, 50)  # frequency=50Hz
+    GPIO.setup(12, GPIO.OUT)  # servo Pin
+    gpioPinServo = GPIO.PWM(12, 50)  # frequency=50Hz
     gpioPinServo.start(0)
 
     return [gpioPinLight, gpioPinServo]
@@ -28,12 +28,12 @@ def handleLight(req, gpioPin):
 def handleAngleServo(req,gpioPin):
 
     duty = req.angle / 32 + 4
-    GPIO.output(servoPin, True)
+    GPIO.output(12, True)
     gpioPin.ChangeDutyCycle(duty)
 
     time.sleep(1)
 
-    GPIO.output(servoPin, False)
+    GPIO.output(12, False)
 
     gpioPin.ChangeDutyCycle(0)
     return cameraAngleResponse(True)
