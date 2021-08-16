@@ -9,12 +9,12 @@ def initGPIOPins():
     GPIO.setmode(GPIO.BCM)
 
 
-    GPIO.setup(23, GPIO.OUT)  # light Pin
-    gpioPinLight = GPIO.PWM(23, 50)  # frequency=50Hz
+    GPIO.setup(LEDPin, GPIO.OUT)  # light Pin
+    gpioPinLight = GPIO.PWM(LEDPin, 50)  # frequency=50Hz
     gpioPinLight.start(0)
 
-    GPIO.setup(12, GPIO.OUT)  # servo Pin
-    gpioPinServo = GPIO.PWM(12, 50)  # frequency=50Hz
+    GPIO.setup(servoPin, GPIO.OUT)  # servo Pin
+    gpioPinServo = GPIO.PWM(servoPin, 50)  # frequency=50Hz
     gpioPinServo.start(0)
 
     return [gpioPinLight, gpioPinServo]
@@ -28,12 +28,12 @@ def handleLight(req, gpioPin):
 def handleAngleServo(req,gpioPin):
 
     duty = req.angle / 32 + 4
-    GPIO.output(12, True)
+    GPIO.output(servoPin, True)
     gpioPin.ChangeDutyCycle(duty)
 
     time.sleep(1)
 
-    GPIO.output(12, False)
+    GPIO.output(servoPin, False)
 
     gpioPin.ChangeDutyCycle(0)
     return cameraAngleResponse(True)
@@ -42,7 +42,7 @@ def startLightLEDServer(gpioPin):
     s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, handleLight, gpioPin)
 
 def startServoCameraServer(gpioPin):
-    s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, handleAngleServo, gpioPin)
+    s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, lambda msg: handleAngleServo(msg, gpioPin))
 
 if __name__ == "__main__":
     [gpioPinLight, gpioPinServo] = initGPIOPins()
