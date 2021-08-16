@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(12, GPIO.OUT)
+#GPIO.setup(12, GPIO.OUT)
 
 p = GPIO.PWM(12, 50)  # frequency=50Hz
 p.start(0)
@@ -15,12 +15,12 @@ p.start(0)
 def SetAngle(angle):
 
     duty = angle / 18 + 2
-    #GPIO.output(12, True)
+    GPIO.output(12, True)
     p.ChangeDutyCycle(duty)
 
     time.sleep(2)
 
-    #GPIO.output(12, False)
+    GPIO.output(12, False)
 
     p.ChangeDutyCycle(0)
 
