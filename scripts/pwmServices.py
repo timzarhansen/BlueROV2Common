@@ -39,15 +39,28 @@ def handleAngleServo(req,gpioPin):
     return cameraAngleResponse(True)
 
 def startLightLEDServer(gpioPin):
-    s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, handleLight, gpioPin)
+    s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, lambda msg: handleLight(msg, gpioPin))
 
 def startServoCameraServer(gpioPin):
     s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, lambda msg: handleAngleServo(msg, gpioPin))
 
+def shutdownHook(gpioPinLight,gpioPinServo):
+    gpioPinLight.stop()
+    gpioPinServo.stop()
+    GPIO.cleanup()
+
+
+
 if __name__ == "__main__":
+
     [gpioPinLight, gpioPinServo] = initGPIOPins()
     rospy.init_node('pwmSignalServer')
 
     startLightLEDServer(gpioPinLight)
     startServoCameraServer(gpioPinServo)
+
+
+
+    rospy.on_shutdown(lambda msg: shutdownHook(gpioPinLight,gpioPinServo))
     rospy.spin()
+
