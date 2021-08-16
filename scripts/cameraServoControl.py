@@ -38,7 +38,9 @@ try:
     SetAngle(90)
     print(90)
     time.sleep(2)
-
+    SetAngle(160)
+    print(160)
+    time.sleep(2)
 except KeyboardInterrupt:
     pass
 p.stop()
