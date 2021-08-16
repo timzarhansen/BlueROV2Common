@@ -14,7 +14,7 @@ p.start(0)
 
 def SetAngle(angle):
 
-    duty = angle / 36 + 4
+    duty = angle / 32 + 4
     GPIO.output(12, True)
     p.ChangeDutyCycle(duty)
 
