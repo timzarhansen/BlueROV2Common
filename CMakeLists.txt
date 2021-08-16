@@ -58,11 +58,11 @@ add_message_files(
 
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+    FILES
+    cameraAngle.srv
+    lightDensity0to10.srv
+)
 
 #add_service_files(DIRECTORY srv FILES AddTwoInts.srv)
 
