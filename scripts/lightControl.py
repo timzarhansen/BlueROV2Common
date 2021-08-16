@@ -8,15 +8,15 @@ p.start(0)
 try:
     while 1:
         print("starting Light")
+        p.ChangeDutyCycle(1)
+        time.sleep(0.5)
+        p.ChangeDutyCycle(3)
+        time.sleep(0.5)
+        p.ChangeDutyCycle(6)
+        time.sleep(0.5)
+        p.ChangeDutyCycle(8)
+        time.sleep(0.5)
         p.ChangeDutyCycle(10)
-        time.sleep(0.5)
-        p.ChangeDutyCycle(30)
-        time.sleep(0.5)
-        p.ChangeDutyCycle(60)
-        time.sleep(0.5)
-        p.ChangeDutyCycle(80)
-        time.sleep(0.5)
-        p.ChangeDutyCycle(100)
         time.sleep(0.5)
 except KeyboardInterrupt:
     pass
