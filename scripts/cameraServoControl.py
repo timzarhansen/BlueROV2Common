@@ -15,8 +15,9 @@ p.start(0)
 
 
 try:
+    p.ChangeDutyCycle(4+5.0/2.0)
     while 1:
-        p.ChangeDutyCycle(4+5.0/2.0)
+
         time.sleep(2)
 
 except KeyboardInterrupt:
