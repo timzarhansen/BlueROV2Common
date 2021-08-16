@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 
 
 GPIO.setmode(GPIO.BCM)
-#GPIO.setup(12, GPIO.OUT)
+GPIO.setup(12, GPIO.OUT)
 
 p = GPIO.PWM(12, 50)  # frequency=50Hz
 p.start(0)
