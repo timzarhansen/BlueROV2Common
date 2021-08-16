@@ -13,13 +13,13 @@ p.start(0)
 
 
 def makeStrength0To10(strength):
-    p.ChangeDutyCycle(5.0+strength/10.0)
+    p.ChangeDutyCycle(5.0+strength/10.0*4.0)
 
 
 try:
     while 1:
         for i in range(0,100,2):
-            makeStrength0To10(i)
+            makeStrength0To10(i/10.0)
             print(i)
             time.sleep(0.5)
 
