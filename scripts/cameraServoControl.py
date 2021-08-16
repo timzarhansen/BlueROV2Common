@@ -14,7 +14,7 @@ p.start(0)
 
 def SetAngle(angle):
 
-    duty = angle / 18 + 2
+    duty = angle / 36 + 4
     GPIO.output(12, True)
     p.ChangeDutyCycle(duty)
 
@@ -25,7 +25,19 @@ def SetAngle(angle):
     p.ChangeDutyCycle(0)
 
 try:
-    SetAngle(80)
+
+    SetAngle(10)
+    print(10)
+    time.sleep(2)
+    SetAngle(30)
+    print(30)
+    time.sleep(2)
+    SetAngle(50)
+    print(50)
+    time.sleep(2)
+    SetAngle(90)
+    print(90)
+    time.sleep(2)
 
 except KeyboardInterrupt:
     pass
