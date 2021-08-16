@@ -61,6 +61,6 @@ if __name__ == "__main__":
 
 
 
-    rospy.on_shutdown(lambda msg: shutdownHook(gpioPinLight,gpioPinServo))
+    rospy.on_shutdown(shutdownHook,[gpioPinLight,gpioPinServo])
     rospy.spin()
 
