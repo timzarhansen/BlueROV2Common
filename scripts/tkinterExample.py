@@ -3,34 +3,56 @@ import rospy
 from bluerov2common.srv import lightDensity0to10, cameraAngle
 import rosservice
 
+
 class rosHandler:
     angleOfCamera = 90
     intensityOfLight = 0
-
+    serviceLight = None
+    serviceCameraAngle = None
     def handleButtonLightPlus(self):
-        self.intensityOfLight = self.intensityOfLight+1
-        rosservice.call_service("set_light_of_leds_0_to_10",self.intensityOfLight)
-        print("+")
+        if (self.intensityOfLight >= 10):
+            self.serviceLight(self.intensityOfLight)
+        else:
+            self.intensityOfLight = self.intensityOfLight + 1
+            self.serviceLight(self.intensityOfLight)
+        #print(self.intensityOfLight)
 
     def handleButtonLightMinus(self):
-        self.intensityOfLight = self.intensityOfLight-1
-        rosservice.call_service("set_light_of_leds_0_to_10",self.intensityOfLight)
-        print("-")
+        if (self.intensityOfLight <= 0):
+            self.serviceLight(self.intensityOfLight)
+        else:
+            self.intensityOfLight = self.intensityOfLight - 1
+            self.serviceLight(self.intensityOfLight)
+        #print(self.intensityOfLight)
 
     def handleButtonCameraMotorPlus(self):
-        print("+")
+        if (self.angleOfCamera >= 180):
+            self.serviceCameraAngle(self.angleOfCamera)
+        else:
+            self.angleOfCamera = self.angleOfCamera + 10
+            self.serviceCameraAngle(self.angleOfCamera)
+        #print(self.angleOfCamera)
 
     def handleButtonCameraMotorMinus(self):
-        print("-")
+        if (self.angleOfCamera <= 0):
+            self.serviceCameraAngle(self.angleOfCamera)
+        else:
+            self.angleOfCamera = self.angleOfCamera - 10
+            self.serviceCameraAngle(self.angleOfCamera)
+        #print(self.angleOfCamera)
 
     def init(self):
-        rospy.init_node('Control_from_main_hub')
+        rospy.init_node('controlRobotFromHub')
+        self.serviceLight = rospy.ServiceProxy("set_light_of_leds_0_to_10", lightDensity0to10)
+        self.serviceLight(self.intensityOfLight)
+        self.serviceCameraAngle = rospy.ServiceProxy("set_angle_of_camera_0_to_180", cameraAngle)
+        self.serviceCameraAngle(self.angleOfCamera)
 
 
 ####################################################     Layout of TK     ####################################################
 rosClassHandler = rosHandler()
 rosClassHandler.init()
-
+print("test")
 root = tk.Tk()
 root.title("Control Of BlueROV2")
 root.geometry("300x300")
