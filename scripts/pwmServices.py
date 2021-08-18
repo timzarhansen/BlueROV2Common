@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from bluerov2common.srv import *
 import rospy
 import RPi.GPIO as GPIO
