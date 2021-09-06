@@ -60,12 +60,15 @@ class pwmClass:
 
 
 if __name__ == "__main__":
-    myPwmClass = pwmClass()
-    myPwmClass.initGPIOPins()
-    rospy.init_node('pwmSignalServer')
+    try:
+        myPwmClass = pwmClass()
+        myPwmClass.initGPIOPins()
+        rospy.init_node('pwmSignalServer')
 
-    myPwmClass.startLightLEDServer()
-    myPwmClass.startServoCameraServer()
+        myPwmClass.startLightLEDServer()
+        myPwmClass.startServoCameraServer()
 
-    rospy.on_shutdown(myPwmClass.shutdownHook)
-    rospy.spin()
+        rospy.on_shutdown(myPwmClass.shutdownHook)
+        rospy.spin()
+    except:
+        pass
