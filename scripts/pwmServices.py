@@ -21,6 +21,7 @@ class pwmClass:
         #self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
         #self.gpioPinLight.start(0)
         self.localPiGPIO = pigpio.pi()
+        self.localPiGPIO.set_mode(self.LEDPin,pigpio.OUTPUT)
         self.localPiGPIO.hardware_PWM(self.LEDPin,50,0)#10000
         #GPIO.setup(self.servoPin, GPIO.OUT)  # servo Pin
         #self.gpioPinServo = GPIO.PWM(self.servoPin, 50)  # frequency=50Hz
