@@ -31,7 +31,7 @@ class rosHandler:
         else:
             self.angleOfCamera = self.angleOfCamera + 10
             self.serviceCameraAngle(self.angleOfCamera)
-        #print(self.angleOfCamera)
+        print(self.angleOfCamera)
 
     def handleButtonCameraMotorMinus(self):
         if (self.angleOfCamera <= 0):
@@ -39,7 +39,7 @@ class rosHandler:
         else:
             self.angleOfCamera = self.angleOfCamera - 10
             self.serviceCameraAngle(self.angleOfCamera)
-        #print(self.angleOfCamera)
+        print(self.angleOfCamera)
 
     def init(self):
         rospy.init_node('controlRobotFromHub')

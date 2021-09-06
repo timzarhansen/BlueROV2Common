@@ -35,7 +35,7 @@ class pwmClass:
         return lightDensity0to10Response(True)
 
     def handleAngleServo(self, req):
-        duty = req.angle / 180 * 10
+        duty = (req.angle / 180)*108 +71
 
         self.gpioPinLight.hardware_PWM(self.servoPin,50,int(duty*10000))#10000
 
