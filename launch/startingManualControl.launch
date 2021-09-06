@@ -1,10 +1,12 @@
 <launch>
     <include file="$(find bluerov2common)/launch/mavrouteStart.launch">
     </include>
-    <include file="$(find bluerov2common)/launch/pwmDriver.launch">
+    <include file="$(find bluerov2common)/launch/pigpiodStart.launch">
     </include>
     <include file="$(find bluerov2common)/launch/leakageDetectionStart.launch">
     </include>
     <include file="$(find bluerov2common)/launch/mavros.launch">
+    </include>
+    <include file="$(find bluerov2common)/launch/pwmDriver.launch">
     </include>
 </launch>

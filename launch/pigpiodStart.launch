@@ -1,0 +1,4 @@
+<launch>
+    <node name="foo2" pkg="bluerov2common" type="startpigpiod.sh" />
+</launch>
+
