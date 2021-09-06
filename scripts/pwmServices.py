@@ -9,8 +9,8 @@ import time
 
 class pwmClass:
     servoPin = 12
-    LEDPin = 23
-    localPiGPIO = None
+    LEDPin = 13
+    #localPiGPIO = None
     gpioPinServo = None
     gpioPinLight = None
 
@@ -20,30 +20,25 @@ class pwmClass:
         #GPIO.setup(self.LEDPin, GPIO.OUT)  # light Pin
         #self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
         #self.gpioPinLight.start(0)
-        self.localPiGPIO = pigpio.pi()
-        self.localPiGPIO.set_mode(self.servoPin,pigpio.OUTPUT)
-        self.localPiGPIO.hardware_PWM(self.servoPin,50,0)#10000
-        #GPIO.setup(self.servoPin, GPIO.OUT)  # servo Pin
-        #self.gpioPinServo = GPIO.PWM(self.servoPin, 50)  # frequency=50Hz
-        #self.gpioPinServo.start(0)
-        #self.localPiGPIO.hardware_PWM(self.servoPin,50,0)#10000
+        self.gpioPinLight = pigpio.pi()
+        self.gpioPinLight.set_mode(self.LEDPin,pigpio.OUTPUT)
+        self.gpioPinLight.hardware_PWM(self.LEDPin,50,0)#10000
+
+        self.gpioPinServo = pigpio.pi()
+        self.gpioPinServo.set_mode(self.servoPin,pigpio.OUTPUT)
+        self.gpioPinServo.hardware_PWM(self.servoPin,50,0)#10000
 
     def handleLight(self, req):
         # start correct lightning
         #self.gpioPinLight.ChangeDutyCycle(5.0 + req.intensity / 2.5)
-        self.localPiGPIO.hardware_PWM(self.servoPin,50,req.intensity*10000)#10000
+        self.gpioPinLight.hardware_PWM(self.LEDPin,50,req.intensity*10000)#10000
         return lightDensity0to10Response(True)
 
     def handleAngleServo(self, req):
-        duty = req.angle / 32 + 4
-        #GPIO.output(self.servoPin, True)
-        #self.gpioPinServo.ChangeDutyCycle(duty)
+        duty = req.angle / 180 * 10
 
-        time.sleep(1)
+        self.gpioPinLight.hardware_PWM(self.LEDPin,50,duty*10000)#10000
 
-        #GPIO.output(self.servoPin, False)
-
-        #self.gpioPinServo.ChangeDutyCycle(0)
         return cameraAngleResponse(True)
 
     def startLightLEDServer(self):
