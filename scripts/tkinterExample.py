@@ -46,6 +46,7 @@ class rosHandler:
         self.serviceLight = rospy.ServiceProxy("set_light_of_leds_0_to_10", lightDensity0to10)
         self.serviceLight(self.intensityOfLight)
         self.serviceCameraAngle = rospy.ServiceProxy("set_angle_of_camera_0_to_180", cameraAngle)
+        print(self.angleOfCamera)
         self.serviceCameraAngle(self.angleOfCamera)
 
 
