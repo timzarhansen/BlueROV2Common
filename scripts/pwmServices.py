@@ -52,9 +52,10 @@ class pwmClass:
         s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, self.handleAngleServo)
 
     def shutdownHook(self):
-        self.gpioPinLight.stop()
-        self.gpioPinServo.stop()
-        GPIO.cleanup()
+        #self.gpioPinLight.stop()
+        print("shutdown")
+        #self.gpioPinServo.stop()
+        #GPIO.cleanup()
 
 
 if __name__ == "__main__":
