@@ -25,7 +25,7 @@ class pwmClass:
         #GPIO.setup(self.servoPin, GPIO.OUT)  # servo Pin
         #self.gpioPinServo = GPIO.PWM(self.servoPin, 50)  # frequency=50Hz
         #self.gpioPinServo.start(0)
-        self.localPiGPIO.hardware_PWM(self.servoPin,50,0)#10000
+        #self.localPiGPIO.hardware_PWM(self.servoPin,50,0)#10000
 
     def handleLight(self, req):
         # start correct lightning
