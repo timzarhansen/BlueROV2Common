@@ -37,7 +37,7 @@ class pwmClass:
     def handleAngleServo(self, req):
         duty = req.angle / 180 * 10
 
-        self.gpioPinLight.hardware_PWM(self.LEDPin,50,duty*10000)#10000
+        self.gpioPinLight.hardware_PWM(self.servoPin,50,duty*10000)#10000
 
         return cameraAngleResponse(True)
 
