@@ -1,0 +1,9 @@
+<launch>
+
+    <node name="cv_camera" pkg="cv_camera" type="cv_camera_node" output="screen" >
+        <rosparam>
+               rate: 2
+        </rosparam>
+    </node>
+</launch>
+
