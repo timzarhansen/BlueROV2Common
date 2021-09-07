@@ -1,5 +1,4 @@
 <launch>
-
     <node name="cv_camera" pkg="cv_camera" type="cv_camera_node" output="screen" >
         <rosparam>
             device_id: 0
