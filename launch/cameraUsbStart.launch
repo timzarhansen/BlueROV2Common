@@ -2,7 +2,10 @@
 
     <node name="cv_camera" pkg="cv_camera" type="cv_camera_node" output="screen" >
         <rosparam>
-               rate: 2
+            device_id: 0
+            rate: 10
+            image_width: 640
+            image_height: 480
         </rosparam>
     </node>
 </launch>
