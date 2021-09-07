@@ -5,6 +5,8 @@
     </include>
     <include file="$(find bluerov2common)/launch/leakageDetectionStart.launch">
     </include>
+    <include file="$(find bluerov2common)/launch/cameraUsbStart.launch">
+    </include>
     <include file="$(find bluerov2common)/launch/mavros.launch">
     </include>
     <include file="$(find bluerov2common)/launch/pwmDriver.launch">
