@@ -4,8 +4,8 @@
         <rosparam>
             device_id: 0
             rate: 10
-            image_width: 640
-            image_height: 480
+            image_width: 1920
+            image_height: 1080
         </rosparam>
     </node>
 </launch>
