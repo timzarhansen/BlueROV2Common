@@ -80,5 +80,7 @@ angleButtonPlus.place(x=180, y=80)
 angleButtonMinus = tk.Button(root, text='-', width=5, height=1, command=rosClassHandler.handleButtonCameraMotorMinus,
                              bg='green')
 angleButtonMinus.place(x=180, y=110)
-
-root.mainloop()
+try:
+    root.mainloop()
+except:
+    pass
