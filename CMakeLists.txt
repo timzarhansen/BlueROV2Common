@@ -12,7 +12,7 @@ project(bluerov2common)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation)
 find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
-
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -226,3 +226,6 @@ include
 
 add_executable(laserScansToPCL src/laserScan2PointCloud.cpp)
 target_link_libraries(laserScansToPCL ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
+
+add_executable(conversionenutofrd src/conversionENUtoFRD.cpp)
+target_link_libraries(conversionenutofrd ${catkin_LIBRARIES} Eigen3::Eigen)
