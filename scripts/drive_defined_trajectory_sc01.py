@@ -31,8 +31,8 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
         current_pos_number = current_pos_number + 1
         if current_pos_number > N - 1:
             current_pos_number = 0
-    print("current_pos_number", current_pos_number)
-
+    print("desiredPos: ", x_des[current_pos_number],y_des[current_pos_number],z_des[current_pos_number])
+    print("currentPos: ", pose_ned.pose.position.x,pose_ned.pose.position.y,pose_ned.pose.position.z)
     send_waypoint = geometry_msgs.msg.PoseStamped()
     send_waypoint.header.stamp = rospy.Time.now()
 
