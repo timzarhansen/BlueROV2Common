@@ -13,4 +13,6 @@
     </include>
     <include file="$(find bluerov2common)/launch/scanningSonar.launch">
     </include>
+    <include file="$(find bluerov2common)/launch/dvlStart.launch">
+    </include>
 </launch>
