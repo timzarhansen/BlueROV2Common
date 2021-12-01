@@ -15,4 +15,7 @@
     </include>
     <include file="$(find bluerov2common)/launch/dvlStart.launch">
     </include>
+    <!-- Start general conbversion to frd -->
+    <node pkg="bluerov2common" type="conversionenutofrd" name="conversionenutofrd" output="screen" required="true">
+    </node>
 </launch>
