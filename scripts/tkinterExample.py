@@ -1,9 +1,11 @@
 import tkinter as tk
 import rospy
 from mavros_msgs.msg import Altitude
-from waterlinked_dvl.msg import TransducerReportStamped,PositionReportStamped
+from waterlinked_dvl.msg import TransducerReportStamped, PositionReportStamped
 from time import sleep
 from bluerov2common.srv import lightDensity0to10, cameraAngle
+from underwaterslam.srv import resetekf
+from geometry_msgs.msg import PoseWithCovarianceStamped
 import rosservice
 import matplotlib
 
@@ -18,10 +20,12 @@ class rosHandler:
     intensityOfLight = 0
     serviceLight = None
     serviceCameraAngle = None
-    currentDepth = None
-    distanceToBottom = None
+    serviceResetEkf = None
+    currentDepth = 0
+    distanceToBottom = 0
     xPositionRobot = list()
     yPositionRobot = list()
+
     def handleButtonLightPlus(self):
         if (self.intensityOfLight >= 10):
             try:
@@ -78,16 +82,24 @@ class rosHandler:
                 print("Service not Available")
         # print(self.angleOfCamera)
 
+    def altitudeCallback(self, data: Altitude):
+        self.currentDepth = -data.local
 
-    def altitudeCallback(self,data: Altitude):
-        self.currentDepth=-data.local
+    def distanceToBottomCallback(self, data: TransducerReportStamped):
+        self.distanceToBottom = data.report.altitude
 
-    def distanceToBottomCallback(self,data: TransducerReportStamped):
-        self.distanceToBottom=data.report.altitude
+    def xyPositionRobotCallback(self, data: PoseWithCovarianceStamped):
+        self.xPositionRobot.append(data.pose.pose.position.x)
+        self.yPositionRobot.append(data.pose.pose.position.y)
 
-    def xyPositionRobotCallback(self,data: PositionReportStamped):
-        self.xPositionRobot.append(data.report.x)
-        self.yPositionRobot.append(data.report.y)
+    def resetekfCallback(self):
+        self.serviceResetEkf(0, 0, 0, True)
+        #reset the array
+        self.xPositionRobot.clear()
+        self.yPositionRobot.clear()
+
+
+
 
     def init(self):
         rospy.init_node('controlRobotFromHub')
@@ -108,10 +120,15 @@ class rosHandler:
             self.serviceCameraAngle(self.angleOfCamera)
         except:
             print("Service not Available")
+
+        try:
+            self.serviceResetEkf = rospy.ServiceProxy("resetCurrentEKF", resetekf)
+        except rospy.ServiceException as e:
+            print("Service call failed reset EKF: %s" % e)
+
         rospy.Subscriber("mavros/altitude", Altitude, self.altitudeCallback)
         rospy.Subscriber("transducer_report", TransducerReportStamped, self.distanceToBottomCallback)
-        rospy.Subscriber("position_report", PositionReportStamped, self.xyPositionRobotCallback)
-
+        rospy.Subscriber("publisherPoseEkf", PoseWithCovarianceStamped, self.xyPositionRobotCallback)
 
 
 ####################################################     Layout of TK     ####################################################
@@ -127,14 +144,14 @@ currentDepthVar = tk.DoubleVar()
 currentDepthVar.set(0)
 distanceToBottomVar = tk.DoubleVar()
 distanceToBottomVar.set(0)
-altitudeNumber = tk.Label(root, textvariable = currentDepthVar)
+altitudeNumber = tk.Label(root, textvariable=currentDepthVar)
 altitudeNumber.place(x=180, y=250)
 altitudeText = tk.Label(root, text="Altitude:")
 altitudeText.place(x=10, y=250)
 
 depthToBottomText = tk.Label(root, text="Distance to Bottom:")
 depthToBottomText.place(x=10, y=350)
-distanceToBottomNumber = tk.Label(root, textvariable = distanceToBottomVar)
+distanceToBottomNumber = tk.Label(root, textvariable=distanceToBottomVar)
 distanceToBottomNumber.place(x=180, y=350)
 
 ########## light ##########
@@ -173,17 +190,17 @@ canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 canvas._tkcanvas.place(x=500, y=200)
 
-resetButtonPositionEstimation = tk.Button(root, text='+', width=5, height=1, command=rosClassHandler.handleButtonCameraMotorPlus,
-                            bg='red')
+resetButtonPositionEstimation = tk.Button(root, text='resetEKF', width=5, height=1,
+                                          command=rosClassHandler.resetekfCallback,
+                                          bg='red')
 resetButtonPositionEstimation.place(x=500, y=50)
 
 while not rospy.is_shutdown():
+
+    # theta = np.random.uniform(0, 360, 10)
+    # r = np.random.uniform(0, 1, 10)
     a.clear()
-    theta = np.random.uniform(0, 360, 10)
-    r = np.random.uniform(0, 1, 10)
-
-
-    a.plot(rosClassHandler.xPositionRobot, rosClassHandler.yPositionRobot, linestyle="None", marker='.',markersize=2)
+    a.plot(rosClassHandler.xPositionRobot, rosClassHandler.yPositionRobot, linestyle="None", marker='.', markersize=2)
     a.set_xlabel('x Position in m')
     a.set_ylabel('y Position in m')
     a.axis('equal')

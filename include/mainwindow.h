@@ -1,0 +1,193 @@
+//
+// Created by tim-linux on 14.12.21.
+//
+
+#include "rosHandlerGui.h"
+
+#ifndef BLUEROV2COMMON_MAINWINDOW_H
+#define BLUEROV2COMMON_MAINWINDOW_H
+
+class MainWindow : public QMainWindow {
+Q_OBJECT
+public:
+    explicit MainWindow(QWidget *parent = nullptr) {
+        sonarRange = 2;
+        sonarStepSize = 1;
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QRect  screenGeometry = screen->geometry();
+        int screenHeight = screenGeometry.height();
+        int screenWidth = screenGeometry.width();
+
+        int sizeOfSlider = 315;
+        int xposRangeSonar=screenWidth-1.5*sizeOfSlider;
+        int yposRangeSonar=0+100;
+        initializationSonarWindows(xposRangeSonar,yposRangeSonar,screenWidth,sizeOfSlider);
+        initializationCurrentPosition(screenWidth);
+        initializationSonarImage(screenWidth);
+        initializationCameraImage(screenWidth);
+        initializationSliderCameraLight(sizeOfSlider);
+
+
+}
+
+public:
+    void handleSonarSlider(int sonarRange);
+    void handleSonarSliderReleased();
+    void handleSonarStepSlider(int sonarRange);
+    void handleSonarStepReleased();
+    void handleEKFReset();
+    void handleHoldPosition();
+    void handleControlWithController();
+    void handleLightSlider(int lightIntensity);
+    void handleLightSliderReleased();
+    void handleCameraAngleSlider(int cameraAngle);
+    void handleCameraAngleSliderReleased();
+
+
+public slots:
+        void updatePositions(QVector<double> xPositionRobot, QVector<double> yPositionRobot, QVector<double> yawPositionRobot);
+        void updateSonarImage(QPixmap sonarImage);
+        void updateCameraImage(QPixmap cameraImage);
+public: signals:
+        void sendSonarRange(double range);
+private:
+    QLabel *distanceToBottom,*depth,*plotOfPosition,*currentYaw,*sonarLabel,*sonarTicks;
+    QLabel *currentSonarRange,*sonarStepSizeLabel,*currentSonarStepSize,*sonarImageLabel;
+    QLabel *lightLabel,*cameraImageLabel,*lightTicks,*currentLightIntensity,*cameraAngleLabel;
+    QLabel *currentCameraAngle,*cameraAngleTicks;
+    QPushButton *resetEKF,*holdPos,*controlByHuman;
+    QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
+    int sonarRange,sonarStepSize,lightIntensity,cameraAngle;
+    QCustomPlot *customPlot;
+    QVector<double> xPositionRobot,yPositionRobot,yawPositionRobot;
+    QPixmap *sonarImage,*cameraImage;
+
+
+private:
+    void initializationSonarWindows(int xposRangeSonar,int yposRangeSonar, int screenWidth, int sizeOfSlider){
+        //range sonar
+        rangeSonarSlider = new QSlider(Qt::Horizontal, this);
+
+        rangeSonarSlider->setFocusPolicy(Qt::StrongFocus);
+        //rangeSonarSlider->setTickPosition(QSlider::TicksBelow);
+        //rangeSonarSlider->setTickInterval(5);
+        rangeSonarSlider->setMaximum(60);
+        rangeSonarSlider->setMinimum(2);
+        rangeSonarSlider->setGeometry(QRect(QPoint(xposRangeSonar, yposRangeSonar), QSize(sizeOfSlider, 20)));
+        sonarLabel = new QLabel("Sonar Range:", this);
+        sonarLabel->setGeometry(QRect(QPoint(screenWidth-1.3*sizeOfSlider, yposRangeSonar-50), QSize(200, 50)));
+        sonarTicks = new QLabel("2                                       30                                       60", this);
+        sonarTicks->setGeometry(QRect(QPoint(xposRangeSonar-3, yposRangeSonar+25), QSize(sizeOfSlider, 15)));
+        currentSonarRange = new QLabel("0",this);
+        currentSonarRange->setGeometry(QRect(QPoint(screenWidth-0.8*sizeOfSlider, yposRangeSonar-50), QSize(200, 50)));
+        connect(rangeSonarSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarSlider);
+        connect(rangeSonarSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarSliderReleased);
+
+        //angular Step size
+        yposRangeSonar = yposRangeSonar+150;
+        angularStepSizeSlider = new QSlider(Qt::Horizontal, this);
+        angularStepSizeSlider->setFocusPolicy(Qt::StrongFocus);
+        angularStepSizeSlider->setMaximum(10);
+        angularStepSizeSlider->setMinimum(1);
+        angularStepSizeSlider->setGeometry(QRect(QPoint(xposRangeSonar, yposRangeSonar), QSize(sizeOfSlider, 20)));
+        sonarStepSizeLabel = new QLabel("Step Size:", this);
+        sonarStepSizeLabel->setGeometry(QRect(QPoint(screenWidth-1.3*sizeOfSlider, yposRangeSonar-50), QSize(200, 50)));
+        sonarTicks = new QLabel("1                                       5                                       10", this);
+        sonarTicks->setGeometry(QRect(QPoint(xposRangeSonar-3, yposRangeSonar+25), QSize(sizeOfSlider, 15)));
+        currentSonarStepSize = new QLabel("0",this);
+        currentSonarStepSize->setGeometry(QRect(QPoint(screenWidth-0.8*sizeOfSlider, yposRangeSonar-50), QSize(200, 50)));
+        connect(angularStepSizeSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarStepSlider);
+        connect(angularStepSizeSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarStepReleased);
+    }
+    void initializationCurrentPosition(int screenWidth){
+        int sizePlot=400;
+        int distanceFromLeftCorner = 50;
+        int sizeButtons=120;
+        resetEKF = new QPushButton("Reset EKF", this);
+        // set size and location of the button
+        resetEKF->setGeometry(QRect(QPoint(distanceFromLeftCorner, 500), QSize(sizeButtons, 40)));
+        connect(resetEKF, &QPushButton::released, this, &MainWindow::handleEKFReset);
+        holdPos = new QPushButton("hold Pos", this);
+        // set size and location of the button
+        holdPos->setGeometry(QRect(QPoint(distanceFromLeftCorner+sizePlot/2-sizeButtons/2, 500), QSize(sizeButtons, 40)));
+        connect(holdPos, &QPushButton::released, this, &MainWindow::handleHoldPosition);
+
+        controlByHuman = new QPushButton("Direct Control", this);
+        // set size and location of the button
+        controlByHuman->setGeometry(QRect(QPoint(distanceFromLeftCorner+sizePlot-sizeButtons, 500), QSize(sizeButtons, 40)));
+        connect(controlByHuman, &QPushButton::released, this, &MainWindow::handleControlWithController);
+
+
+        this->customPlot = new QCustomPlot(this);
+        this->customPlot->setGeometry(QRect(QPoint(distanceFromLeftCorner, 550), QSize(sizePlot, sizePlot)));
+// create graph and assign data to it:
+        this->customPlot->addGraph();
+        this->customPlot->graph(0)->setData(this->xPositionRobot, this->yPositionRobot);
+// give the axes some labels:
+        this->customPlot->xAxis->setLabel("x");
+        this->customPlot->yAxis->setLabel("y");
+// set axes ranges, so we see all data:
+        double xMin = *std::min_element(this->xPositionRobot.constBegin(), this->xPositionRobot.constEnd());
+        double xMax = *std::max_element(this->xPositionRobot.constBegin(), this->xPositionRobot.constEnd());
+        double yMin = *std::min_element(this->yPositionRobot.constBegin(), this->yPositionRobot.constEnd());
+        double yMax = *std::max_element(this->yPositionRobot.constBegin(), this->yPositionRobot.constEnd());
+//        this->customPlot->xAxis->setRange(xMin-1, xMax+1);
+//        this->customPlot->yAxis->setRange(yMin-1, yMax+1);
+        this->customPlot->graph(0)->setLineStyle(QCPGraph::lsNone);
+        this->customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 2));
+        this->customPlot->replot();
+
+    }
+    void initializationSonarImage(int screenWidth){
+        int sizeSonarImage = 500;
+        this->sonarImageLabel = new QLabel("exampleImage", this);
+        this->sonarImageLabel->setGeometry(QRect(QPoint(screenWidth-sizeSonarImage-50, 500), QSize(sizeSonarImage, sizeSonarImage)));
+
+        this->sonarImage = new QPixmap("/home/tim-linux/Pictures/file_example_JPG_100kB.jpg");
+        this->sonarImageLabel->setPixmap(sonarImage->scaled(sonarImageLabel->width(), sonarImageLabel->height(), Qt::KeepAspectRatio));
+    }
+    void initializationCameraImage(int screenWidth){
+        int sizeCameraImage = 500;
+        this->cameraImageLabel = new QLabel("exampleImage", this);
+        this->cameraImageLabel->setGeometry(QRect(QPoint(screenWidth/2-sizeCameraImage/2, 500), QSize(sizeCameraImage, sizeCameraImage)));
+
+        this->cameraImage = new QPixmap("/home/tim-linux/Pictures/file_example_JPG_100kB.jpg");
+        this->cameraImageLabel->setPixmap(cameraImage->scaled(cameraImageLabel->width(), cameraImageLabel->height(), Qt::KeepAspectRatio));
+    }
+    void initializationSliderCameraLight(int sizeOfSlider){
+        int positionGeneral = 100;
+        //lights
+        this->lightSlider = new QSlider(Qt::Horizontal, this);
+        this->lightSlider->setFocusPolicy(Qt::StrongFocus);
+        this->lightSlider->setTickInterval(1);
+        this->lightSlider->setMaximum(10);
+        this->lightSlider->setMinimum(0);
+        this->lightSlider->setGeometry(QRect(QPoint(50, positionGeneral), QSize(sizeOfSlider, 20)));
+        this->lightLabel = new QLabel("Light Intensity:", this);
+        this->lightLabel->setGeometry(QRect(QPoint(50, positionGeneral-30), QSize(100, 20)));
+        this->currentLightIntensity = new QLabel("0",this);
+        this->currentLightIntensity->setGeometry(QRect(QPoint(50+154, positionGeneral-30), QSize(100, 20)));
+        this->lightTicks = new QLabel("0                                           5                                   10", this);
+        this->lightTicks->setGeometry(QRect(QPoint(50-3, positionGeneral+30), QSize(sizeOfSlider, 15)));
+        connect(this->lightSlider, &QSlider::valueChanged, this, &MainWindow::handleLightSlider);
+        connect(this->lightSlider, &QSlider::sliderReleased, this, &MainWindow::handleLightSliderReleased);
+        //camera angle
+        positionGeneral=positionGeneral+100;
+        this->cameraAngleSlider = new QSlider(Qt::Horizontal, this);
+        this->cameraAngleSlider->setFocusPolicy(Qt::StrongFocus);
+        this->cameraAngleSlider->setTickInterval(10);
+        this->cameraAngleSlider->setMaximum(180);
+        this->cameraAngleSlider->setMinimum(0);
+        this->cameraAngleSlider->setGeometry(QRect(QPoint(50, positionGeneral), QSize(sizeOfSlider, 20)));
+        this->cameraAngleLabel = new QLabel("camera Angle:", this);
+        this->cameraAngleLabel->setGeometry(QRect(QPoint(50, positionGeneral-30), QSize(100, 20)));
+        this->currentCameraAngle = new QLabel("0", this);
+        this->currentCameraAngle->setGeometry(QRect(QPoint(50 + 151, positionGeneral - 30), QSize(100, 20)));
+        this->cameraAngleTicks = new QLabel("0                                          90                                180", this);
+        this->cameraAngleTicks->setGeometry(QRect(QPoint(50-3, positionGeneral+30), QSize(sizeOfSlider, 15)));
+        connect(this->cameraAngleSlider, &QSlider::valueChanged, this, &MainWindow::handleCameraAngleSlider);
+        connect(this->cameraAngleSlider, &QSlider::sliderReleased, this, &MainWindow::handleCameraAngleSliderReleased);
+    }
+};
+
+#endif //BLUEROV2COMMON_MAINWINDOW_H
