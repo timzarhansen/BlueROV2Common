@@ -17,6 +17,8 @@
 #include "cv_bridge/cv_bridge.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <QtGamepad/QGamepad>
+
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
 #define BLUEROV2COMMON_ROSHANDLERGUI_H
 

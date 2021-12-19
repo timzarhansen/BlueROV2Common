@@ -91,3 +91,17 @@ void MainWindow::handleCameraAngleSliderReleased(){
     std::cout << "send Camera Angle to Robot: "<< this->cameraAngle <<  std::endl;
 
 }
+
+void MainWindow::updateRightX(double value){std::cout << "Right X: "<< value << std::endl;}//move x body axis
+void MainWindow::updateRightY(double value){std::cout << "Right Y: "<< value << std::endl;}//move y body axis
+void MainWindow::updateLeftX(double value){std::cout << "Left X: "<< value << std::endl;}//yaw rotation
+void MainWindow::updateLeftY(double value){std::cout << "Left Y: "<< value << std::endl;}//nothing
+void MainWindow::updateXButton(bool pressed){std::cout << "X button Pressed: "<< pressed << std::endl;}//roll +
+void MainWindow::updateSquareButton(bool pressed){std::cout << "Square button Pressed: "<< pressed << std::endl;}//pitch +
+void MainWindow::updateCircleButton(bool pressed){std::cout << "Circle button Pressed: "<< pressed << std::endl;}//roll -
+void MainWindow::updateTriangleButton(bool pressed){std::cout << "Triangle button Pressed: "<< pressed << std::endl;}//pitch -
+void MainWindow::updateR1Button(bool pressed){std::cout << "R1 button Pressed: "<< pressed << std::endl;}//height +
+void MainWindow::updateR2Button(bool pressed){std::cout << "R2 button Pressed: "<< pressed << std::endl;}//height -
+void MainWindow::updateL1Button(bool pressed){std::cout << "L1 button Pressed: "<< pressed << std::endl;}//nothing
+void MainWindow::updateL2Button(bool pressed){std::cout << "L2 button Pressed: "<< pressed << std::endl;}//nothing
+

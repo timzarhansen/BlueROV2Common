@@ -17,7 +17,7 @@ project(bluerov2common)
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation cv_bridge)
 find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(Qt5 COMPONENTS Core Gui  Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui  Widgets Gamepad REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Qt5PrintSupport REQUIRED)
 ## System dependencies are found with CMake's conventions
@@ -61,6 +61,7 @@ include
         ${OpenCV_INCLUDE_DIRS}
 )
 
+
 add_executable(laserScansToPCL src/laserScan2PointCloud.cpp)
 target_link_libraries(laserScansToPCL ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
@@ -68,4 +69,4 @@ add_executable(conversionenutofrd src/conversionENUtoFRD.cpp)
 target_link_libraries(conversionenutofrd ${catkin_LIBRARIES} Eigen3::Eigen)
 
 add_executable(guibluerov2 src/guiBlueROV2.cpp include/mainwindow.h src/mainwindow.cpp src/rosHandlerGui.cpp include/rosHandlerGui.h include/qcustomplot.h src/qcustomplot.cpp)
-target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport Qt5::Gamepad ${catkin_LIBRARIES} ${OpenCV_LIBS})

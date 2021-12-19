@@ -26,7 +26,7 @@ public:
         initializationSonarImage(screenWidth);
         initializationCameraImage(screenWidth);
         initializationSliderCameraLight(sizeOfSlider);
-
+        initializationGamepad();
 
 }
 
@@ -42,12 +42,35 @@ public:
     void handleLightSliderReleased();
     void handleCameraAngleSlider(int cameraAngle);
     void handleCameraAngleSliderReleased();
+    //Gamepad Handling Functions
+    void handleHeight(double changeOfHeight);
+    void handleRoll(double changeOfRoll);
+    void handlePitch(double changeOfPitch);
+    void handleYaw(double changeOfYaw);
+    void handleLocalXMovement(double changeOfX);
+    void handleLocalYMovement(double changeOfY);
+    void changeHoldPositionStatus(bool holdPosition);
 
 
 public slots:
         void updatePositions(QVector<double> xPositionRobot, QVector<double> yPositionRobot, QVector<double> yawPositionRobot);
         void updateSonarImage(QPixmap sonarImage);
         void updateCameraImage(QPixmap cameraImage);
+        void updateRightX(double value);
+        void updateRightY(double value);
+        void updateLeftX(double value);
+        void updateLeftY(double value);
+        void updateXButton(bool pressed);
+        void updateSquareButton(bool pressed);
+        void updateCircleButton(bool pressed);
+        void updateTriangleButton(bool pressed);
+        void updateR1Button(bool pressed);
+        void updateR2Button(bool pressed);
+        void updateL1Button(bool pressed);
+        void updateL2Button(bool pressed);
+
+
+
 public: signals:
         void sendSonarRange(double range);
 private:
@@ -61,7 +84,7 @@ private:
     QCustomPlot *customPlot;
     QVector<double> xPositionRobot,yPositionRobot,yawPositionRobot;
     QPixmap *sonarImage,*cameraImage;
-
+    QGamepad *m_gamepad;
 
 private:
     void initializationSonarWindows(int xposRangeSonar,int yposRangeSonar, int screenWidth, int sizeOfSlider){
@@ -187,6 +210,31 @@ private:
         this->cameraAngleTicks->setGeometry(QRect(QPoint(50-3, positionGeneral+30), QSize(sizeOfSlider, 15)));
         connect(this->cameraAngleSlider, &QSlider::valueChanged, this, &MainWindow::handleCameraAngleSlider);
         connect(this->cameraAngleSlider, &QSlider::sliderReleased, this, &MainWindow::handleCameraAngleSliderReleased);
+    }
+    void initializationGamepad(){
+        auto gamepads = QGamepadManager::instance()->connectedGamepads();
+        if (gamepads.isEmpty()) {
+            qDebug() << "Did not find any connected gamepads";
+            return;
+        }
+
+        this->m_gamepad = new QGamepad(*gamepads.begin(), this);
+        connect(this->m_gamepad, &QGamepad::axisLeftXChanged, this, &MainWindow::updateLeftX);
+        connect(this->m_gamepad, &QGamepad::axisLeftYChanged, this, &MainWindow::updateLeftY);
+        connect(this->m_gamepad, &QGamepad::axisRightXChanged, this, &MainWindow::updateRightX);
+        connect(this->m_gamepad, &QGamepad::axisRightYChanged, this, &MainWindow::updateRightY);
+        connect(this->m_gamepad, &QGamepad::buttonAChanged, this, &MainWindow::updateXButton);
+        connect(this->m_gamepad, &QGamepad::buttonBChanged, this,&MainWindow::updateCircleButton );
+        connect(this->m_gamepad, &QGamepad::buttonXChanged, this, &MainWindow::updateTriangleButton);
+        connect(this->m_gamepad, &QGamepad::buttonYChanged, this, &MainWindow::updateSquareButton);
+        connect(this->m_gamepad, &QGamepad::buttonL1Changed, this, &MainWindow::updateL1Button);
+        connect(this->m_gamepad, &QGamepad::buttonR1Changed, this, &MainWindow::updateR1Button);
+        connect(this->m_gamepad, &QGamepad::buttonL2Changed, this, &MainWindow::updateL2Button);
+        connect(this->m_gamepad, &QGamepad::buttonR2Changed, this, &MainWindow::updateR2Button);
+        //currently not used:
+//        connect(this->m_gamepad, &QGamepad::buttonSelectChanged, this, );
+//        connect(this->m_gamepad, &QGamepad::buttonStartChanged, this, );
+//        connect(this->m_gamepad, &QGamepad::buttonGuideChanged, this, );
     }
 };
 
