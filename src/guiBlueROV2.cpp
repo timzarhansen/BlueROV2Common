@@ -1,6 +1,6 @@
 
 #include "mainwindow.h"
-#include <thread>
+
 
 void init(){
     ros::spin();
@@ -17,22 +17,24 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     MainWindow mainWindow;
+
     mainWindow.showMaximized();
 
 
     mainWindow.setStyleSheet("background-color: rgb(177,205,186); ");
     //ROS to GUI
-    QObject::connect(&rosHandler, &rosHandlerGui::updatePositionsROS,
-                     &mainWindow, &MainWindow::updatePositions);
+    QObject::connect(&rosHandler, &rosHandlerGui::updatePlotPositionVectorROS,
+                     &mainWindow, &MainWindow::updateStateForPlotting);
+    QObject::connect(&rosHandler, &rosHandlerGui::updateStateOfRobotROS,
+                     &mainWindow, &MainWindow::updateStateOfRobot);
     QObject::connect(&rosHandler, &rosHandlerGui::updateSonarImageROS,
                      &mainWindow, &MainWindow::updateSonarImage);
     QObject::connect(&rosHandler, &rosHandlerGui::updateCameraImageROS,
                      &mainWindow, &MainWindow::updateCameraImage);
     //GUI to ROS
     QObject::connect(&mainWindow, &MainWindow::sendSonarRange, &rosHandler, &rosHandlerGui::setSonarRange);
+    QObject::connect(&mainWindow, &MainWindow::updateDesiredState, &rosHandler, &rosHandlerGui::updateDesiredState);
 
-
-    //ros::spin();// as far as i understand not necessary because of app.exec.
 
     return app.exec();
 }

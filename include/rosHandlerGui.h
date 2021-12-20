@@ -18,6 +18,11 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <QtGamepad/QGamepad>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <Eigen/Geometry>
+#include <Eigen/StdVector>
+#include <thread>
 
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
 #define BLUEROV2COMMON_ROSHANDLERGUI_H
@@ -30,27 +35,40 @@ public:
         subscriberPosRobot = n_.subscribe("publisherPoseEkf",1000,&rosHandlerGui::positionCallback,this);
         subscriberSonarImage = n_.subscribe("ping360_node/sonar/images",1000,&rosHandlerGui::sonarImageCallback,this);
         subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
-
+        //publishingDesiredState = n_.advertise<geometry_msgs::PoseStamped>("publisherPoseEkf", 10);
     }
     //double xPositionRobot,yPositionRobot;
 public slots:
     void setSonarRange(double range);
+    void updateDesiredState(double desiredHeight, double desiredRoll,double desiredPitch, double desiredYaw, double desiredXMovement, double desiredYMovement,bool holdPosition);
 public:
     signals:
-        void updatePositionsROS(QVector<double> xPositionRobot, QVector<double> yPositionRobot, QVector<double> yawPositionRobot);
+        void updatePlotPositionVectorROS(QVector<double> xPositionRobot, QVector<double> yPositionRobot, QVector<double> yawPositionRobot);
         void updateSonarImageROS(QPixmap sonarImage);
         void updateCameraImageROS(QPixmap cameraImage);
+        void updateStateOfRobotROS(double xPos, double yPos, double zPos, double roll, double pitch, double yaw, Eigen::MatrixXd covariance);//covariance is just 6 values
 
 private:
     double angleOfCamera ,intensityOfLight,currentDepth,distanceToBottom;
 //        std::vector<double> xPositionRobot,yPositionRobot,yawPositionRobot;
     QVector<double> xPositionRobot, yPositionRobot,yawPositionRobot;
     ros::Subscriber subscriberPosRobot,subscriberSonarImage,subscriberCameraImage;
+    std::atomic<double> desiredHeight, desiredRoll,desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
+    ros::Publisher publishingDesiredState;
+
 
     void positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
     void sonarImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void cameraImageCallback(const sensor_msgs::ImageConstPtr& msg);
-
+public:
+    Eigen::Vector3d getRollPitchYaw(Eigen::Quaterniond quat) {
+    tf2::Quaternion tmp(quat.x(), quat.y(), quat.z(), quat.w());
+    tf2::Matrix3x3 m(tmp);
+    double r, p, y;
+    m.getRPY(r, p, y);
+    Eigen::Vector3d returnVector(r, p, y);
+    return returnVector;
+    }
 };
 
 
