@@ -34,8 +34,8 @@ public:
         this->initializationSonarImage(screenWidth);
         this->initializationCameraImage(screenWidth);
         this->initializationSliderCameraLight(sizeOfSlider);
-        this->initializationGamepad();
-        std::thread t1(&MainWindow::threadSendCurrentDesiredPoseRobot, this);
+        this->initializationGamepad(screenWidth);
+
 
     }
 
@@ -77,12 +77,39 @@ public:
 
     void changeHoldPositionStatus(bool holdPosition);
 
+    void threadSendCurrentDesiredPoseRobot() {
+        ros::Rate loop_rate(30);
+
+        while (ros::ok()) {
+
+            this->updateRightX(this->m_gamepad->axisRightX());
+            this->updateRightY(this->m_gamepad->axisRightY());
+            this->updateLeftX(this->m_gamepad->axisLeftX());
+            this->updateXButton(this->m_gamepad->buttonA());
+            this->updateSquareButton(this->m_gamepad->buttonY());
+            this->updateCircleButton(this->m_gamepad->buttonB());
+            this->updateTriangleButton(this->m_gamepad->buttonX());
+            this->updateR1Button(this->m_gamepad->buttonR1());
+            this->updateR2Button(this->m_gamepad->buttonR2());
+
+
+            //std::cout << "Sending data from Gui To ROS: " << test<< std::endl;
+
+
+            emit this->updateDesiredState(this->desiredHeight, this->desiredRoll, this->desiredPitch, this->desiredYaw,
+                                          this->desiredXMovement, this->desiredYMovement, this->holdPositionStatus);
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
+
+
+    }
 
 public slots:
 
     void
-    updateStateForPlotting(QVector<double> xPositionRobot, QVector<double> yPositionRobot,
-                           QVector<double> yawPositionRobot);
+    updateStateForPlotting(std::vector<double> xPositionRobot, std::vector<double> yPositionRobot,
+                           std::vector<double> yawPositionRobot);
 
     void updateStateOfRobot(double xPos, double yPos, double zPos, double roll, double pitch, double yaw,
                             Eigen::MatrixXd covariance);//covariance is just 6 values
@@ -109,7 +136,7 @@ public slots:
 
     void updateR1Button(bool pressed);
 
-    void updateR2Button(bool pressed);
+    void updateR2Button(double pressedValue);
 
     void updateL1Button(bool pressed);
 
@@ -128,13 +155,15 @@ private:
     QLabel *currentSonarRange, *sonarStepSizeLabel, *currentSonarStepSize, *sonarImageLabel;
     QLabel *lightLabel, *cameraImageLabel, *lightTicks, *currentLightIntensity, *cameraAngleLabel;
     QLabel *currentCameraAngle, *cameraAngleTicks;
-    QPushButton *resetEKF, *holdPos, *controlByHuman;
+    QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel;
+    QPushButton *resetEKF, *holdPos;
     QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
     int sonarRange, sonarStepSize, lightIntensity, cameraAngle;
     QCustomPlot *customPlot;
     QVector<double> xPositionRobot, yPositionRobot, yawPositionRobot;
     QPixmap *sonarImage, *cameraImage;
     QGamepad *m_gamepad;
+    bool connectedGamepad;
     std::atomic<double> desiredHeight, desiredRoll, desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
 
     std::atomic<bool> holdPositionStatus;
@@ -193,17 +222,17 @@ private:
         // set size and location of the button
         resetEKF->setGeometry(QRect(QPoint(distanceFromLeftCorner, 500), QSize(sizeButtons, 40)));
         connect(resetEKF, &QPushButton::released, this, &MainWindow::handleEKFReset);
-        holdPos = new QPushButton("hold Pos", this);
+        this->holdPos = new QPushButton("hold Pos", this);
         // set size and location of the button
-        holdPos->setGeometry(
-                QRect(QPoint(distanceFromLeftCorner + sizePlot / 2 - sizeButtons / 2, 500), QSize(sizeButtons, 40)));
-        connect(holdPos, &QPushButton::released, this, &MainWindow::handleHoldPosition);
-
-        controlByHuman = new QPushButton("Direct Control", this);
-        // set size and location of the button
-        controlByHuman->setGeometry(
+        this->holdPos->setGeometry(
                 QRect(QPoint(distanceFromLeftCorner + sizePlot - sizeButtons, 500), QSize(sizeButtons, 40)));
-        connect(controlByHuman, &QPushButton::released, this, &MainWindow::handleControlWithController);
+        connect(this->holdPos, &QPushButton::released, this, &MainWindow::handleHoldPosition);
+
+//        controlByHuman = new QPushButton("Direct Control", this);
+        // set size and location of the button
+//        controlByHuman->setGeometry(
+//                QRect(QPoint(distanceFromLeftCorner + sizePlot - sizeButtons, 500), QSize(sizeButtons, 40)));
+//        connect(controlByHuman, &QPushButton::released, this, &MainWindow::handleControlWithController);
 
 
         this->customPlot = new QCustomPlot(this);
@@ -286,47 +315,80 @@ private:
         connect(this->cameraAngleSlider, &QSlider::sliderReleased, this, &MainWindow::handleCameraAngleSliderReleased);
     }
 
-    void initializationGamepad() {
+    void initializationGamepad(int screenWidth) {
         auto gamepads = QGamepadManager::instance()->connectedGamepads();
         if (gamepads.isEmpty()) {
             qDebug() << "Did not find any connected gamepads";
-            return;
+            this->connectedGamepad = false;
+        }else{
+            this->connectedGamepad = true;
         }
 
         this->m_gamepad = new QGamepad(*gamepads.begin(), this);
-        connect(this->m_gamepad, &QGamepad::axisLeftXChanged, this, &MainWindow::updateLeftX);
-        connect(this->m_gamepad, &QGamepad::axisLeftYChanged, this, &MainWindow::updateLeftY);
-        connect(this->m_gamepad, &QGamepad::axisRightXChanged, this, &MainWindow::updateRightX);
-        connect(this->m_gamepad, &QGamepad::axisRightYChanged, this, &MainWindow::updateRightY);
-        connect(this->m_gamepad, &QGamepad::buttonAChanged, this, &MainWindow::updateXButton);
-        connect(this->m_gamepad, &QGamepad::buttonBChanged, this, &MainWindow::updateCircleButton);
-        connect(this->m_gamepad, &QGamepad::buttonXChanged, this, &MainWindow::updateTriangleButton);
-        connect(this->m_gamepad, &QGamepad::buttonYChanged, this, &MainWindow::updateSquareButton);
-        connect(this->m_gamepad, &QGamepad::buttonL1Changed, this, &MainWindow::updateL1Button);
-        connect(this->m_gamepad, &QGamepad::buttonR1Changed, this, &MainWindow::updateR1Button);
-        connect(this->m_gamepad, &QGamepad::buttonL2Changed, this, &MainWindow::updateL2Button);
-        connect(this->m_gamepad, &QGamepad::buttonR2Changed, this, &MainWindow::updateR2Button);
+//        connect(this->m_gamepad, &QGamepad::axisLeftXChanged, this, &MainWindow::updateLeftX);
+//        connect(this->m_gamepad, &QGamepad::axisLeftYChanged, this, &MainWindow::updateLeftY);
+//        connect(this->m_gamepad, &QGamepad::axisRightXChanged, this, &MainWindow::updateRightX);
+//        connect(this->m_gamepad, &QGamepad::axisRightYChanged, this, &MainWindow::updateRightY);
+//        connect(this->m_gamepad, &QGamepad::buttonAChanged, this, &MainWindow::updateXButton);
+//        connect(this->m_gamepad, &QGamepad::buttonBChanged, this, &MainWindow::updateCircleButton);
+//        connect(this->m_gamepad, &QGamepad::buttonXChanged, this, &MainWindow::updateTriangleButton);
+//        connect(this->m_gamepad, &QGamepad::buttonYChanged, this, &MainWindow::updateSquareButton);
+//        connect(this->m_gamepad, &QGamepad::buttonL1Changed, this, &MainWindow::updateL1Button);
+//        connect(this->m_gamepad, &QGamepad::buttonR1Changed, this, &MainWindow::updateR1Button);
+//        connect(this->m_gamepad, &QGamepad::buttonL2Changed, this, &MainWindow::updateL2Button);
+//        connect(this->m_gamepad, &QGamepad::buttonR2Changed, this, &MainWindow::updateR2Button);
         //currently not used:
 //        connect(this->m_gamepad, &QGamepad::buttonSelectChanged, this, );
 //        connect(this->m_gamepad, &QGamepad::buttonStartChanged, this, );
 //        connect(this->m_gamepad, &QGamepad::buttonGuideChanged, this, );
+        int xPositionOfLabels = 200;
+        int yPositionOfLabels = 350;
+        currentXThrustLabel = new QLabel("Thrust X: ", this);
+        currentXThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels), QSize(100, 50)));
+
+        currentYThrustLabel = new QLabel("Thrust Y: ", this);
+        currentYThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels), QSize(100, 50)));
+
+        currentHeightDesiredLabel = new QLabel("Height : ", this);
+        currentHeightDesiredLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels), QSize(100, 50)));
+
+        currentDesiredRollLabel = new QLabel("Roll: ", this);
+        currentDesiredRollLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 50), QSize(100, 50)));
+
+        currentDesiredPitchLabel = new QLabel("Pitch: ", this);
+        currentDesiredPitchLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 50), QSize(100, 50)));
+
+        currentDesiredYawLabel = new QLabel("Yaw: ", this);
+        currentDesiredYawLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 50), QSize(100, 50)));
+
+
     }
 
-    void threadSendCurrentDesiredPoseRobot() {
-        ros::Rate loop_rate(10);
+    static QVector<double> keepEveryNthElementWithAverage(std::vector<double> array, int nthElement){
+        QVector<double> output;
+        double av = 0;
 
-        while (ros::ok()) {
+//        if(nthElement>1){
+//            std::cout << "Starting For Loop: "<< nthElement << std::endl;
+//        }
+        int howOften=1;
+        for (int i = 0; i < array.size(); i++)
+        {
+            av += array[i];
 
-            std::cout << "Sending data from Gui To ROS" << std::endl;
+            if (i % nthElement == 0)
+            {
 
-
-            emit this->updateDesiredState(this->desiredHeight, this->desiredRoll, this->desiredPitch, this->desiredYaw,
-                                          this->desiredXMovement, this->desiredYMovement, this->holdPositionStatus);
-            ros::spinOnce();
-            loop_rate.sleep();
+                output.append(av / ((double) howOften));
+                av = 0; // reset sum for next average
+                howOften = 0;
+            }
+            howOften++;
         }
-
-
+        return output;
     }
 
 };

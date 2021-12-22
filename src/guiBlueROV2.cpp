@@ -16,10 +16,12 @@ int main(int argc, char *argv[])
     std::thread t1(init);
 
     QApplication app(argc, argv);
+    qRegisterMetaType<Eigen::MatrixXd>("Eigen::MatrixXd");
+    qRegisterMetaType<std::vector<double>>("std::vector<double>");
     MainWindow mainWindow;
 
     mainWindow.showMaximized();
-
+    std::thread t2(&MainWindow::threadSendCurrentDesiredPoseRobot, &mainWindow);
 
     mainWindow.setStyleSheet("background-color: rgb(177,205,186); ");
     //ROS to GUI

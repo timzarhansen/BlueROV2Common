@@ -3,12 +3,27 @@
 //
 #include "mainwindow.h"
 
+#include <utility>
 
-void MainWindow::updateStateForPlotting(QVector<double> xPositionRobot, QVector<double> yPositionRobot,
-                                        QVector<double> yawPositionRobot) {
-    this->xPositionRobot = xPositionRobot;
-    this->yPositionRobot = yPositionRobot;
-    this->yawPositionRobot = yawPositionRobot;
+
+void MainWindow::updateStateForPlotting(std::vector<double> xPositionRobot, std::vector<double> yPositionRobot,
+                                        std::vector<double> yawPositionRobot) {
+
+    if(xPositionRobot.size()>300){
+
+        int everyNthElement= xPositionRobot.size()/300;
+        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,everyNthElement);
+        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,everyNthElement);
+        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,everyNthElement);
+    }else{
+        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,1);
+        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,1);
+        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,1);
+    }
+
+
+    //std::nth_element(this->xPositionRobot.begin(),this->xPositionRobot.begin()+5,this->xPositionRobot.end());
+//    std::cout << this->xPositionRobot.size() << std::endl;
     double xMin = *std::min_element(this->xPositionRobot.constBegin(), this->xPositionRobot.constEnd());
     double xMax = *std::max_element(this->xPositionRobot.constBegin(), this->xPositionRobot.constEnd());
     double yMin = *std::min_element(this->yPositionRobot.constBegin(), this->yPositionRobot.constEnd());
@@ -66,6 +81,19 @@ void MainWindow::handleEKFReset() {
 
 void MainWindow::handleHoldPosition() {
     std::cout << "send hold Position" << std::endl;
+    this->holdPositionStatus= not this->holdPositionStatus;
+
+    QPalette pal = this->holdPos->palette();
+    if(this->holdPositionStatus){
+        pal.setColor(QPalette::Button, QColor(Qt::green));
+    }else{
+        pal.setColor(QPalette::Button, QColor(Qt::red));
+    }
+
+    this->holdPos->setAutoFillBackground(true);
+    this->holdPos->setFlat(true);
+    this->holdPos->setPalette(pal);
+    this->holdPos->update();
 
 }
 
@@ -98,81 +126,116 @@ void MainWindow::handleCameraAngleSliderReleased() {
 
 //move x body axis
 void MainWindow::updateRightX(double value) {
-    std::cout << "Right X: " << value << std::endl;
-    this->desiredXMovement = 0.2 * value;
+//    std::cout << "Right X: " << value << std::endl;
+    this->desiredYMovement = 0.2 * value;
+    QString xstr = "Thrust Y: " + QString::number(this->desiredYMovement, 'f', 2);
+    this->currentYThrustLabel->setText(xstr);
 }
 
 //move y body axis
 void MainWindow::updateRightY(double value) {
-    std::cout << "Right Y: " << value << std::endl;
-    this->desiredYMovement = 0.2 * value;
+//    std::cout << "Right Y: " << value << std::endl;
+    this->desiredXMovement = -0.2 * value;
+    QString xstr = "Thrust X: " + QString::number(this->desiredXMovement, 'f', 2);
+    this->currentXThrustLabel->setText(xstr);
 }
 
 //yaw rotation
 void MainWindow::updateLeftX(double value) {
-    std::cout << "Left X: " << value << std::endl;
-
-    this->desiredYaw =this->desiredYaw+0.01 * value;
+//    std::cout << "Left X: " << value << std::endl;
+    this->desiredYaw = this->desiredYaw + 0.01 * value;
     //make sure to hold yaw in range of +- pi
     if (this->desiredYaw > M_PI) {
-        this->desiredYaw = this->desiredYaw-2 * M_PI;
+        this->desiredYaw = this->desiredYaw - 2 * M_PI;
     }
     if (this->desiredYaw < -M_PI) {
-        this->desiredYaw = this->desiredYaw+2 * M_PI;
+        this->desiredYaw = this->desiredYaw + 2 * M_PI;
     }
+    QString xstr = "Yaw: " + QString::number(this->desiredYaw * 180 / M_PI, 'f', 2);
+    this->currentDesiredYawLabel->setText(xstr);
 }
 
 void MainWindow::updateLeftY(double value) { std::cout << "Left Y: " << value << std::endl; }//nothing
 
 //roll +
 void MainWindow::updateXButton(bool pressed) {
-    std::cout << "X button Pressed: " << pressed << std::endl;
-    this->desiredRoll = this->desiredRoll+0.01;
-    if (this->desiredRoll > M_PI) {
-        this->desiredRoll =this->desiredRoll- 2 * M_PI;
+//    std::cout << "X button Pressed: " << pressed << std::endl;
+    if (pressed) {
+        this->desiredRoll = this->desiredRoll + 0.01;
+        if (this->desiredRoll > M_PI) {
+            this->desiredRoll = this->desiredRoll - 2 * M_PI;
+        }
+
+        QString xstr = "Roll: " + QString::number(this->desiredRoll * 180 / M_PI, 'f', 2);
+        this->currentDesiredRollLabel->setText(xstr);
     }
+
 }
 
 //pitch +
 void MainWindow::updateSquareButton(bool pressed) {
-    std::cout << "Square button Pressed: " << pressed << std::endl;
-    this->desiredPitch =this->desiredPitch+ 0.01;
-    if (this->desiredPitch > M_PI / 2) {
-        this->desiredPitch = M_PI / 2;
+//    std::cout << "Square button Pressed: " << pressed << std::endl;
+    if (pressed) {
+        this->desiredPitch = this->desiredPitch + 0.01;
+
+        if (this->desiredPitch > M_PI / 2) {
+            this->desiredPitch = M_PI / 2;
+        }
+        QString xstr = "Pitch: " + QString::number(this->desiredPitch * 180 / M_PI, 'f', 2);
+        this->currentDesiredPitchLabel->setText(xstr);
     }
 }
 
 //roll -
 void MainWindow::updateCircleButton(bool pressed) {
-    std::cout << "Circle button Pressed: " << pressed << std::endl;
-    this->desiredRoll = this->desiredRoll-0.01;
-    if (this->desiredRoll < -M_PI) {
-        this->desiredRoll = this->desiredRoll+2 * M_PI;
+//    std::cout << "Circle button Pressed: " << pressed << std::endl;
+    if (pressed) {
+        this->desiredRoll = this->desiredRoll - 0.01;
+
+        if (this->desiredRoll < -M_PI) {
+            this->desiredRoll = this->desiredRoll + 2 * M_PI;
+        }
+        QString xstr = "Roll: " + QString::number(this->desiredRoll * 180 / M_PI, 'f', 2);
+        this->currentDesiredRollLabel->setText(xstr);
     }
 }
 
 //pitch -
 void MainWindow::updateTriangleButton(bool pressed) {
-    std::cout << "Triangle button Pressed: " << pressed << std::endl;
-    this->desiredPitch =this->desiredPitch- 0.01;
-    if (this->desiredPitch < -M_PI / 2) {
-        this->desiredPitch = -M_PI / 2;
+//    std::cout << "Triangle button Pressed: " << pressed << std::endl;
+    if (pressed) {
+        this->desiredPitch = this->desiredPitch - 0.01;
+
+        if (this->desiredPitch < -M_PI / 2) {
+            this->desiredPitch = -M_PI / 2;
+        }
+        QString xstr = "Pitch: " + QString::number(this->desiredPitch * 180 / M_PI, 'f', 2);
+        this->currentDesiredPitchLabel->setText(xstr);
     }
 }
 
 //height +
 void MainWindow::updateR1Button(bool pressed) {
-    std::cout << "R1 button Pressed: " << pressed << std::endl;
-    if (abs(this->desiredHeight - this->currentHeight) < 1.0f) {
-        this->desiredHeight = this->desiredHeight+0.1;
+//    std::cout << "R1 button Pressed: " << pressed << std::endl;
+
+    if (pressed) {
+        if (abs(this->desiredHeight - 0.1 - this->currentHeight) < 1.0f) {
+            this->desiredHeight = this->desiredHeight - 0.1;
+        }
+        QString xstr = "Height: " + QString::number(this->desiredHeight, 'f', 2);
+        this->currentHeightDesiredLabel->setText(xstr);
     }
 }
 
 //height -
-void MainWindow::updateR2Button(bool pressed) {
-    std::cout << "R2 button Pressed: " << pressed << std::endl;
-    if (abs(this->desiredHeight - this->currentHeight) < 1.0f) {
-        this->desiredHeight =this->desiredHeight- 0.1;
+void MainWindow::updateR2Button(double pressedValue) {
+//    std::cout << "R2 button Pressed: " << pressedValue << std::endl;
+    if (pressedValue>0.2) {
+        if (abs(this->desiredHeight + 0.1 - this->currentHeight) < 1.0f) {
+            this->desiredHeight = this->desiredHeight + 0.1;
+        }
+        QString xstr = "Height: " + QString::number(this->desiredHeight, 'f', 2);
+        this->currentHeightDesiredLabel->setText(xstr);
     }
 }
 

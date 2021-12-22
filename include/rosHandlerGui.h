@@ -23,6 +23,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <thread>
+#include <bluerov2common/desiredStateForRobot.h>
 
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
 #define BLUEROV2COMMON_ROSHANDLERGUI_H
@@ -35,7 +36,7 @@ public:
         subscriberPosRobot = n_.subscribe("publisherPoseEkf",1000,&rosHandlerGui::positionCallback,this);
         subscriberSonarImage = n_.subscribe("ping360_node/sonar/images",1000,&rosHandlerGui::sonarImageCallback,this);
         subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
-        //publishingDesiredState = n_.advertise<geometry_msgs::PoseStamped>("publisherPoseEkf", 10);
+        publishingDesiredState = n_.advertise<bluerov2common::desiredStateForRobot>("desiredStateOfBluerov2", 10);
     }
     //double xPositionRobot,yPositionRobot;
 public slots:
@@ -43,7 +44,7 @@ public slots:
     void updateDesiredState(double desiredHeight, double desiredRoll,double desiredPitch, double desiredYaw, double desiredXMovement, double desiredYMovement,bool holdPosition);
 public:
     signals:
-        void updatePlotPositionVectorROS(QVector<double> xPositionRobot, QVector<double> yPositionRobot, QVector<double> yawPositionRobot);
+        void updatePlotPositionVectorROS(std::vector<double> xPositionRobot, std::vector<double> yPositionRobot, std::vector<double> yawPositionRobot);
         void updateSonarImageROS(QPixmap sonarImage);
         void updateCameraImageROS(QPixmap cameraImage);
         void updateStateOfRobotROS(double xPos, double yPos, double zPos, double roll, double pitch, double yaw, Eigen::MatrixXd covariance);//covariance is just 6 values
@@ -51,9 +52,9 @@ public:
 private:
     double angleOfCamera ,intensityOfLight,currentDepth,distanceToBottom;
 //        std::vector<double> xPositionRobot,yPositionRobot,yawPositionRobot;
-    QVector<double> xPositionRobot, yPositionRobot,yawPositionRobot;
+    std::vector<double> xPositionRobot, yPositionRobot,yawPositionRobot;
     ros::Subscriber subscriberPosRobot,subscriberSonarImage,subscriberCameraImage;
-    std::atomic<double> desiredHeight, desiredRoll,desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
+    //std::atomic<double> desiredHeight, desiredRoll,desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
     ros::Publisher publishingDesiredState;
 
 
