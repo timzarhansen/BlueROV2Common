@@ -24,6 +24,7 @@
 #include <Eigen/StdVector>
 #include <thread>
 #include <bluerov2common/desiredStateForRobot.h>
+#include <underwaterslam/resetekf.h>
 
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
 #define BLUEROV2COMMON_ROSHANDLERGUI_H
@@ -37,11 +38,13 @@ public:
         subscriberSonarImage = n_.subscribe("ping360_node/sonar/images",1000,&rosHandlerGui::sonarImageCallback,this);
         subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
         publishingDesiredState = n_.advertise<bluerov2common::desiredStateForRobot>("desiredStateOfBluerov2", 10);
+        clientEKF = n_.serviceClient<underwaterslam::resetekf>("resetCurrentEKF");
     }
     //double xPositionRobot,yPositionRobot;
 public slots:
     void setSonarRange(double range);
     void updateDesiredState(double desiredHeight, double desiredRoll,double desiredPitch, double desiredYaw, double desiredXMovement, double desiredYMovement,bool holdPosition);
+    void resetEKFEstimator(bool resetOnlyGraph);
 public:
     signals:
         void updatePlotPositionVectorROS(std::vector<double> xPositionRobot, std::vector<double> yPositionRobot, std::vector<double> yawPositionRobot);
@@ -56,6 +59,7 @@ private:
     ros::Subscriber subscriberPosRobot,subscriberSonarImage,subscriberCameraImage;
     //std::atomic<double> desiredHeight, desiredRoll,desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
     ros::Publisher publishingDesiredState;
+    ros::ServiceClient clientEKF;
 
 
     void positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);

@@ -12,13 +12,13 @@ void MainWindow::updateStateForPlotting(std::vector<double> xPositionRobot, std:
     if(xPositionRobot.size()>300){
 
         int everyNthElement= xPositionRobot.size()/300;
-        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,everyNthElement);
-        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,everyNthElement);
-        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,everyNthElement);
+        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,everyNthElement,50);
+        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,everyNthElement,50);
+        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,everyNthElement,50);
     }else{
-        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,1);
-        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,1);
-        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,1);
+        this->xPositionRobot = this->keepEveryNthElementWithAverage(xPositionRobot,1,0);
+        this->yPositionRobot = this->keepEveryNthElementWithAverage(yPositionRobot,1,0);
+        this->yawPositionRobot = this->keepEveryNthElementWithAverage(yawPositionRobot,1,0);
     }
 
 
@@ -77,6 +77,13 @@ void MainWindow::handleSonarStepReleased() {
 
 void MainWindow::handleEKFReset() {
     std::cout << "send reset to EKF" << std::endl;
+    emit this->resetEKFEstimator(false);
+
+}
+
+void MainWindow::handleResetEKFGraph() {
+
+    emit this->resetEKFEstimator(true);
 }
 
 void MainWindow::handleHoldPosition() {
@@ -127,7 +134,7 @@ void MainWindow::handleCameraAngleSliderReleased() {
 //move x body axis
 void MainWindow::updateRightX(double value) {
 //    std::cout << "Right X: " << value << std::endl;
-    this->desiredYMovement = 0.2 * value;
+    this->desiredYMovement = 0.5 * value;
     QString xstr = "Thrust Y: " + QString::number(this->desiredYMovement, 'f', 2);
     this->currentYThrustLabel->setText(xstr);
 }
@@ -135,7 +142,7 @@ void MainWindow::updateRightX(double value) {
 //move y body axis
 void MainWindow::updateRightY(double value) {
 //    std::cout << "Right Y: " << value << std::endl;
-    this->desiredXMovement = -0.2 * value;
+    this->desiredXMovement = -0.5 * value;
     QString xstr = "Thrust X: " + QString::number(this->desiredXMovement, 'f', 2);
     this->currentXThrustLabel->setText(xstr);
 }

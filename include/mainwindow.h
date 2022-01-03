@@ -77,6 +77,8 @@ public:
 
     void changeHoldPositionStatus(bool holdPosition);
 
+    void handleResetEKFGraph();
+
     void threadSendCurrentDesiredPoseRobot() {
         ros::Rate loop_rate(30);
 
@@ -142,6 +144,8 @@ public slots:
 
     void updateL2Button(bool pressed);
 
+
+
 public:
 signals:
 
@@ -150,13 +154,15 @@ signals:
     void updateDesiredState(double desiredHeight, double desiredRoll, double desiredPitch, double desiredYaw,
                             double desiredXMovement, double desiredYMovement, bool holdPosition);
 
+    void resetEKFEstimator(bool resetOnlyGraph);
+
 private:
     QLabel *distanceToBottom, *depth, *plotOfPosition, *sonarLabel, *sonarTicks;
     QLabel *currentSonarRange, *sonarStepSizeLabel, *currentSonarStepSize, *sonarImageLabel;
     QLabel *lightLabel, *cameraImageLabel, *lightTicks, *currentLightIntensity, *cameraAngleLabel;
     QLabel *currentCameraAngle, *cameraAngleTicks;
     QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel;
-    QPushButton *resetEKF, *holdPos;
+    QPushButton *resetEKF, *holdPos, *resetGraphEKF;
     QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
     int sonarRange, sonarStepSize, lightIntensity, cameraAngle;
     QCustomPlot *customPlot;
@@ -193,7 +199,7 @@ private:
                 QRect(QPoint(screenWidth - 0.8 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
         connect(rangeSonarSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarSlider);
         connect(rangeSonarSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarSliderReleased);
-
+        this->rangeSonarSlider->setSliderPosition(30);
         //angular Step size
         yposRangeSonar = yposRangeSonar + 150;
         angularStepSizeSlider = new QSlider(Qt::Horizontal, this);
@@ -212,6 +218,7 @@ private:
                 QRect(QPoint(screenWidth - 0.8 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
         connect(angularStepSizeSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarStepSlider);
         connect(angularStepSizeSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarStepReleased);
+        this->angularStepSizeSlider->setSliderPosition(5);
     }
 
     void initializationCurrentPosition(int screenWidth) {
@@ -228,11 +235,11 @@ private:
                 QRect(QPoint(distanceFromLeftCorner + sizePlot - sizeButtons, 500), QSize(sizeButtons, 40)));
         connect(this->holdPos, &QPushButton::released, this, &MainWindow::handleHoldPosition);
 
-//        controlByHuman = new QPushButton("Direct Control", this);
-        // set size and location of the button
-//        controlByHuman->setGeometry(
-//                QRect(QPoint(distanceFromLeftCorner + sizePlot - sizeButtons, 500), QSize(sizeButtons, 40)));
-//        connect(controlByHuman, &QPushButton::released, this, &MainWindow::handleControlWithController);
+        resetGraphEKF = new QPushButton("Reset Graph", this);
+//         set size and location of the button
+        resetGraphEKF->setGeometry(
+                QRect(QPoint(distanceFromLeftCorner + sizePlot/2 - sizeButtons/2, 500), QSize(sizeButtons, 40)));
+        connect(resetGraphEKF, &QPushButton::released, this, &MainWindow::handleResetEKFGraph);
 
 
         this->customPlot = new QCustomPlot(this);
@@ -296,6 +303,7 @@ private:
         this->lightTicks->setGeometry(QRect(QPoint(50 - 3, positionGeneral + 30), QSize(sizeOfSlider, 15)));
         connect(this->lightSlider, &QSlider::valueChanged, this, &MainWindow::handleLightSlider);
         connect(this->lightSlider, &QSlider::sliderReleased, this, &MainWindow::handleLightSliderReleased);
+        this->lightSlider->setSliderPosition(0);
         //camera angle
         positionGeneral = positionGeneral + 100;
         this->cameraAngleSlider = new QSlider(Qt::Horizontal, this);
@@ -313,6 +321,7 @@ private:
         this->cameraAngleTicks->setGeometry(QRect(QPoint(50 - 3, positionGeneral + 30), QSize(sizeOfSlider, 15)));
         connect(this->cameraAngleSlider, &QSlider::valueChanged, this, &MainWindow::handleCameraAngleSlider);
         connect(this->cameraAngleSlider, &QSlider::sliderReleased, this, &MainWindow::handleCameraAngleSliderReleased);
+        this->cameraAngleSlider->setSliderPosition(90);
     }
 
     void initializationGamepad(int screenWidth) {
@@ -367,7 +376,7 @@ private:
 
     }
 
-    static QVector<double> keepEveryNthElementWithAverage(std::vector<double> array, int nthElement){
+    static QVector<double> keepEveryNthElementWithAverage(std::vector<double> array, int nthElement,int holdLastPositions){
         QVector<double> output;
         double av = 0;
 
@@ -375,7 +384,7 @@ private:
 //            std::cout << "Starting For Loop: "<< nthElement << std::endl;
 //        }
         int howOften=1;
-        for (int i = 0; i < array.size(); i++)
+        for (int i = 0; i < array.size()-holdLastPositions; i++)
         {
             av += array[i];
 
@@ -388,6 +397,10 @@ private:
             }
             howOften++;
         }
+        for (int i = array.size()-holdLastPositions; i < array.size(); i++){
+            output.append(array[i]);
+        }
+
         return output;
     }
 

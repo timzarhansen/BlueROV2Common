@@ -74,3 +74,6 @@ target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupp
 
 add_executable(controllerbluerov2 include/controllerOfBluerov2.h src/controllerOfBluerov2.cpp src/controllerRosNode.cpp)
 target_link_libraries(controllerbluerov2 ${catkin_LIBRARIES} Eigen3::Eigen)
+
+add_executable(justChristmasPresentCalculation src/randomTestFOrWeihnachtsgeschenk.cpp )
+target_link_libraries(justChristmasPresentCalculation ${catkin_LIBRARIES} Eigen3::Eigen)

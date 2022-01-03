@@ -9,6 +9,7 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
 //    std::cout << "test1332"<< std::endl;
     this->xPositionRobot.push_back(msg->pose.pose.position.x);
     this->yPositionRobot.push_back(msg->pose.pose.position.y);
+
     Eigen::Quaterniond rotation;
     rotation.x() = msg->pose.pose.orientation.x;
     rotation.y() = msg->pose.pose.orientation.y;
@@ -21,7 +22,7 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
     }
 
     Eigen::Vector3d rollPitchYaw = this->getRollPitchYaw(rotation);
-
+    this->yawPositionRobot.push_back(rollPitchYaw[2]);
 //    std::cout << "test132"<< std::endl;
     emit this->updatePlotPositionVectorROS(this->xPositionRobot, this->yPositionRobot, this->yawPositionRobot);
     emit this->updateStateOfRobotROS(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z,
@@ -90,3 +91,17 @@ void rosHandlerGui::updateDesiredState(double desiredHeight, double desiredRoll,
 
 }
 
+void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph){
+    if(not resetOnlyGraph){
+        underwaterslam::resetekf srv;
+        srv.request.xPos = 0;
+        srv.request.yPos = 0;
+        srv.request.yaw = 0;
+        srv.request.resetCovariances = true;
+        this->clientEKF.call(srv);
+    }
+
+    this->xPositionRobot.clear();
+    this->yPositionRobot.clear();
+    this->yawPositionRobot.clear();
+}

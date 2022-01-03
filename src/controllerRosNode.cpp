@@ -6,13 +6,18 @@
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "ekffordvlwithros");
+    ros::init(argc, argv, "controllerofbluerov");
     ros::start();
     ros::NodeHandle n_;
     controllerOfBluerov2 classOfController(n_);
+    ros::Rate rate(30);
+//    ros::spin();
+    while(ros::ok()){
+        classOfController.controllLogic();
 
-    ros::spin();
-
+        rate.sleep();
+        ros::spinOnce();
+    }
 
     return (0);
 }
