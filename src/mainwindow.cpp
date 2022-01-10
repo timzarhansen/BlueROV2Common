@@ -28,13 +28,16 @@ void MainWindow::updateStateForPlotting(std::vector<double> xPositionRobot, std:
     double xMax = *std::max_element(this->xPositionRobot.constBegin(), this->xPositionRobot.constEnd());
     double yMin = *std::min_element(this->yPositionRobot.constBegin(), this->yPositionRobot.constEnd());
     double yMax = *std::max_element(this->yPositionRobot.constBegin(), this->yPositionRobot.constEnd());
-    this->customPlot->xAxis->setRange(xMin - 1, xMax + 1);
-    this->customPlot->yAxis->setRange(yMin - 1, yMax + 1);
+    this->customPlot->xAxis->setRange(yMin - 1, yMax + 1);
+    this->customPlot->yAxis->setRange(xMin - 1, xMax + 1);
     //std::cout << this->xPositionRobot.size() << std::endl;
     //this->customPlot->clearGraphs();
-    this->customPlot->graph(0)->setData(this->xPositionRobot, this->yPositionRobot);
+    this->customPlot->graph(0)->setData(this->yPositionRobot, this->xPositionRobot);
     this->customPlot->graph(0)->setLineStyle(QCPGraph::lsNone);
     this->customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 2));
+    this->customPlot->xAxis->setLabel("y");
+    this->customPlot->yAxis->setLabel("x");
+//    std::cout << "test" << std::endl;
     this->customPlot->replot();
 
 }

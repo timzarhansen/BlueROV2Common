@@ -35,7 +35,7 @@ class rosHandlerGui: public QObject {
 public:
     rosHandlerGui(ros::NodeHandle n_) {
         subscriberPosRobot = n_.subscribe("publisherPoseEkf",1000,&rosHandlerGui::positionCallback,this);
-        subscriberSonarImage = n_.subscribe("ping360_node/sonar/images",1000,&rosHandlerGui::sonarImageCallback,this);
+        subscriberSonarImage = n_.subscribe("sonar/image",1000,&rosHandlerGui::sonarImageCallback,this);
         subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
         publishingDesiredState = n_.advertise<bluerov2common::desiredStateForRobot>("desiredStateOfBluerov2", 10);
         clientEKF = n_.serviceClient<underwaterslam::resetekf>("resetCurrentEKF");
