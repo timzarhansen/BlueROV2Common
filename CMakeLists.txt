@@ -28,6 +28,7 @@ add_message_files(
     FILES
     leakageDetection.msg
     desiredStateForRobot.msg
+    staterobotforevaluation.msg
 #   Message1.msg
 #   Message2.msg
 )
