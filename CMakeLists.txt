@@ -14,7 +14,7 @@ project(bluerov2common)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation cv_bridge underwaterslam)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation cv_bridge underwaterslam ping360_sonar)
 find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Qt5 COMPONENTS Core Gui  Widgets Gamepad REQUIRED)

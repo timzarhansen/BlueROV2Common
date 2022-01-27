@@ -149,12 +149,16 @@ public slots:
 public:
 signals:
 
-    void sendSonarRange(double range);
-
     void updateDesiredState(double desiredHeight, double desiredRoll, double desiredPitch, double desiredYaw,
                             double desiredXMovement, double desiredYMovement, bool holdPosition);
 
     void resetEKFEstimator(bool resetOnlyGraph);
+
+    void updateConfigSonar(int stepSize, int rangeSonar);
+
+    void updateAngleCamera(int angleCamera);
+
+    void updateLightIntensity(int intensityLight);
 
 private:
     QLabel *distanceToBottom, *depth, *plotOfPosition, *sonarLabel, *sonarTicks;
@@ -164,7 +168,7 @@ private:
     QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel;
     QPushButton *resetEKF, *holdPos, *resetGraphEKF;
     QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
-    int sonarRange, sonarStepSize, lightIntensity, cameraAngle;
+    int sonarRange, sonarStepSize, lightIntensity, cameraAngleDesired;
     QCustomPlot *customPlot;
     QVector<double> xPositionRobot, yPositionRobot, yawPositionRobot;
     QPixmap *sonarImage, *cameraImage;

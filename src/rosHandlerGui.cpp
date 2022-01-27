@@ -4,6 +4,14 @@
 
 #include "rosHandlerGui.h"
 
+void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar){
+    ping360_sonar::sendingSonarConfig srv;
+    srv.request.range = rangeSonar;
+    srv.request.stepSize = stepSize;
+    clientSonar.call(srv);
+//    std::cout << "changed sonar Config" << std::endl;
+}
+
 
 void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg) {
 //    std::cout << "test1332"<< std::endl;
@@ -29,8 +37,16 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
                                      rollPitchYaw[0], rollPitchYaw[1], rollPitchYaw[2], covariance);
 }
 
-void rosHandlerGui::setSonarRange(double range) {
+void rosHandlerGui::updateAngleCamera(int angleCamera){
+    bluerov2common::cameraAngle srv;
+    srv.request.angle = angleCamera;
+    this->clientCameraAngle.call(srv);
+}
 
+void rosHandlerGui::updateLightIntensity(int intensityLight){
+    bluerov2common::lightDensity0to10 srv;
+    srv.request.intensity = intensityLight;
+    this->clientLight.call(srv);
 }
 
 void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {

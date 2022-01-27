@@ -62,7 +62,8 @@ void MainWindow::handleSonarSlider(int sonarRange) {
 
 void MainWindow::handleSonarSliderReleased() {
     //send current distance to the Sonar
-    std::cout << "sonarRange send to Sonar: " << this->sonarRange << std::endl;
+//    std::cout << "sonarRange send to Sonar: " << this->sonarRange << std::endl;
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange);
 }
 
 void MainWindow::handleSonarStepSlider(int angularStepSize) {
@@ -74,8 +75,8 @@ void MainWindow::handleSonarStepSlider(int angularStepSize) {
 
 void MainWindow::handleSonarStepReleased() {
     //send current distance to the Sonar
-    std::cout << "sonarStepSize send to Sonar: " << this->sonarStepSize << std::endl;
-
+//    std::cout << "sonarStepSize send to Sonar: " << this->sonarStepSize << std::endl;
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange);
 }
 
 void MainWindow::handleEKFReset() {
@@ -119,19 +120,19 @@ void MainWindow::handleLightSlider(int lightIntensity) {
 }
 
 void MainWindow::handleLightSliderReleased() {
-    std::cout << "send Light to Robot: " << this->lightIntensity << std::endl;
-
+//    std::cout << "send Light to Robot: " << this->lightIntensity << std::endl;
+    emit this->updateLightIntensity(this->lightIntensity);
 }
 
 void MainWindow::handleCameraAngleSlider(int cameraAngle) {
     QString xstr = QString::number(cameraAngle);
-    this->cameraAngle = cameraAngle;
+    this->cameraAngleDesired = cameraAngle;
     this->currentCameraAngle->setText(xstr);
 }
 
 void MainWindow::handleCameraAngleSliderReleased() {
-    std::cout << "send Camera Angle to Robot: " << this->cameraAngle << std::endl;
-
+//    std::cout << "send Camera Angle to Robot: " << this->cameraAngleDesired << std::endl;
+    emit this->updateAngleCamera(this->cameraAngleDesired);
 }
 
 //move x body axis

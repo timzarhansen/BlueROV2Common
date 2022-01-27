@@ -34,10 +34,11 @@ int main(int argc, char *argv[])
     QObject::connect(&rosHandler, &rosHandlerGui::updateCameraImageROS,
                      &mainWindow, &MainWindow::updateCameraImage);
     //GUI to ROS
-    QObject::connect(&mainWindow, &MainWindow::sendSonarRange, &rosHandler, &rosHandlerGui::setSonarRange);
     QObject::connect(&mainWindow, &MainWindow::updateDesiredState, &rosHandler, &rosHandlerGui::updateDesiredState);
     QObject::connect(&mainWindow, &MainWindow::resetEKFEstimator, &rosHandler, &rosHandlerGui::resetEKFEstimator);
-
+    QObject::connect(&mainWindow, &MainWindow::updateConfigSonar, &rosHandler, &rosHandlerGui::updateConfigSonar);
+    QObject::connect(&mainWindow, &MainWindow::updateAngleCamera, &rosHandler, &rosHandlerGui::updateAngleCamera);
+    QObject::connect(&mainWindow, &MainWindow::updateLightIntensity, &rosHandler, &rosHandlerGui::updateLightIntensity);
 
     return app.exec();
 }
