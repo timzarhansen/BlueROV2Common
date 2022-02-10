@@ -69,7 +69,7 @@ void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {
     emit updateSonarImageROS(myPixMap);
 }
 
-void rosHandlerGui::cameraImageCallback(const sensor_msgs::ImageConstPtr &msg) {
+void rosHandlerGui::cameraImageCallback(const sensor_msgs::CompressedImagePtr &msg) {
     cv_bridge::CvImagePtr cv_ptr;
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);

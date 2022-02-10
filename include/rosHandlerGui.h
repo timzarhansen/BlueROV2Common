@@ -40,7 +40,8 @@ public:
     rosHandlerGui(ros::NodeHandle n_)  {
         subscriberPosRobot = n_.subscribe("publisherPoseEkf",1000,&rosHandlerGui::positionCallback,this);
         subscriberSonarImage = n_.subscribe("sonar/image",1000,&rosHandlerGui::sonarImageCallback,this);
-        subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
+//        subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
+        subscriberCameraImage = n_.subscribe("camera/image_raw/compressed",1000,&rosHandlerGui::cameraImageCallback,this);
         publishingDesiredState = n_.advertise<bluerov2common::desiredStateForRobot>("desiredStateOfBluerov2", 10);
         clientEKF = n_.serviceClient<underwaterslam::resetekf>("resetCurrentEKF");
         clientSonar = n_.serviceClient<ping360_sonar::sendingSonarConfig>("changeParametersSonar");
@@ -75,7 +76,7 @@ private:
 
     void positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
     void sonarImageCallback(const sensor_msgs::ImageConstPtr& msg);
-    void cameraImageCallback(const sensor_msgs::ImageConstPtr& msg);
+    void cameraImageCallback(const sensor_msgs::CompressedImagePtr & msg);
 
 public:
     Eigen::Vector3d getRollPitchYaw(Eigen::Quaterniond quat) {
