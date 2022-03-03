@@ -2,7 +2,7 @@
 // Created by tim-linux on 22.12.21.
 //
 #include <ros/ros.h>
-#include "bluerov2common/desiredStateForRobot.h"
+#include "commonbluerovmsg/desiredStateForRobot.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/TwistWithCovarianceStamped.h"
 #include "mavros_msgs/AttitudeTarget.h"
@@ -68,7 +68,7 @@ private:
     std::atomic<double> integratorHeight;
 
     //functions
-    void desiredStateCallback(const bluerov2common::desiredStateForRobot::ConstPtr &msg);
+    void desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg);
 
     void currentTwistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg);
 

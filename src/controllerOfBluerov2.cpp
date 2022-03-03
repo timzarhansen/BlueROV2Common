@@ -121,7 +121,7 @@ Eigen::Vector3d controllerOfBluerov2::getThrustForMavros(double thrust_1, double
 }
 
 
-void controllerOfBluerov2::desiredStateCallback(const bluerov2common::desiredStateForRobot::ConstPtr &msg){
+void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg){
     this->desiredDepth = msg->desiredHeight;
     this->desiredYaw = msg->desiredYaw;
     this->desiredXThrustBody = msg->desiredXThrust;

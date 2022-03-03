@@ -23,11 +23,11 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <thread>
-#include <bluerov2common/desiredStateForRobot.h>
-#include <underwaterslam/resetekf.h>
+#include <commonbluerovmsg/desiredStateForRobot.h>
+#include <commonbluerovmsg/resetekf.h>
 #include <ping360_sonar/sendingSonarConfig.h>
-#include <bluerov2common/lightDensity0to10.h>
-#include <bluerov2common/cameraAngle.h>
+#include <commonbluerovmsg/lightDensity0to10.h>
+#include <commonbluerovmsg/cameraAngle.h>
 
 
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
@@ -42,11 +42,11 @@ public:
         subscriberSonarImage = n_.subscribe("sonar/image",1000,&rosHandlerGui::sonarImageCallback,this);
 //        subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
         subscriberCameraImage = n_.subscribe("camera/image_raw/compressed",1000,&rosHandlerGui::cameraImageCallback,this);
-        publishingDesiredState = n_.advertise<bluerov2common::desiredStateForRobot>("desiredStateOfBluerov2", 10);
-        clientEKF = n_.serviceClient<underwaterslam::resetekf>("resetCurrentEKF");
+        publishingDesiredState = n_.advertise<commonbluerovmsg::desiredStateForRobot>("desiredStateOfBluerov2", 10);
+        clientEKF = n_.serviceClient<commonbluerovmsg::resetekf>("resetCurrentEKF");
         clientSonar = n_.serviceClient<ping360_sonar::sendingSonarConfig>("changeParametersSonar");
-        clientLight = n_.serviceClient<bluerov2common::lightDensity0to10>("set_light_of_leds_0_to_10");
-        clientCameraAngle = n_.serviceClient<bluerov2common::cameraAngle>("set_angle_of_camera_0_to_180");
+        clientLight = n_.serviceClient<commonbluerovmsg::lightDensity0to10>("set_light_of_leds_0_to_10");
+        clientCameraAngle = n_.serviceClient<commonbluerovmsg::cameraAngle>("set_angle_of_camera_0_to_180");
     }
     //double xPositionRobot,yPositionRobot;
 public slots:

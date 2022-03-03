@@ -14,7 +14,7 @@ project(bluerov2common)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation cv_bridge underwaterslam ping360_sonar)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs roscpp message_generation cv_bridge underwaterslam ping360_sonar commonbluerovmsg)
 find_package(PCL 1.10 REQUIRED COMPONENTS common io visualization)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Qt5 COMPONENTS Core Gui  Widgets Gamepad REQUIRED)
@@ -24,23 +24,25 @@ find_package(Qt5PrintSupport REQUIRED)
 # find_package(Boost REQUIRED COMPONENTS system)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-    FILES
-    leakageDetection.msg
-    desiredStateForRobot.msg
-    staterobotforevaluation.msg
+#add_message_files(
+#    FILES
+#    leakageDetection.msg
+#    desiredStateForRobot.msg
+#    staterobotforevaluation.msg
 #   Message1.msg
 #   Message2.msg
-)
+#)
 #add_message_files(DIRECTORY msg FILES Num.msg)
 
 
 ## Generate services in the 'srv' folder
-add_service_files(
-    FILES
-    cameraAngle.srv
-    lightDensity0to10.srv
-)
+#add_service_files(
+#    FILES
+#    cameraAngle.srv
+#    lightDensity0to10.srv
+#    resetekf.srv
+#    saveGraph.srv
+#)
 
 #add_service_files(DIRECTORY srv FILES AddTwoInts.srv)
 

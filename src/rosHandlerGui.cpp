@@ -38,13 +38,13 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
 }
 
 void rosHandlerGui::updateAngleCamera(int angleCamera){
-    bluerov2common::cameraAngle srv;
+    commonbluerovmsg::cameraAngle srv;
     srv.request.angle = angleCamera;
     this->clientCameraAngle.call(srv);
 }
 
 void rosHandlerGui::updateLightIntensity(int intensityLight){
-    bluerov2common::lightDensity0to10 srv;
+    commonbluerovmsg::lightDensity0to10 srv;
     srv.request.intensity = intensityLight;
     this->clientLight.call(srv);
 }
@@ -94,7 +94,7 @@ void rosHandlerGui::updateDesiredState(double desiredHeight, double desiredRoll,
                                        double desiredXMovement, double desiredYMovement, bool holdPosition) {
 
     //this just sends the data to ros, the frame rate is made by mainwindow
-    bluerov2common::desiredStateForRobot msg;
+    commonbluerovmsg::desiredStateForRobot msg;
     msg.header.stamp = ros::Time::now();
     msg.desiredHeight = desiredHeight;
     msg.desiredRoll = desiredRoll;
@@ -109,7 +109,7 @@ void rosHandlerGui::updateDesiredState(double desiredHeight, double desiredRoll,
 
 void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph){
     if(not resetOnlyGraph){
-        underwaterslam::resetekf srv;
+        commonbluerovmsg::resetekf srv;
         srv.request.xPos = 0;
         srv.request.yPos = 0;
         srv.request.yaw = 0;
