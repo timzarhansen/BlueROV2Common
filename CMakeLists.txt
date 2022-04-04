@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
+set(CATKIN_ENABLE_TESTING OFF)
 project(bluerov2common)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
