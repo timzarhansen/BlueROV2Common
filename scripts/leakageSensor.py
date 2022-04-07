@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from time import sleep           # Allows us to call the sleep function to slow down our loop test
-from bluerov2common.msg import leakageDetection
+from commonbluerovmsg.msg import leakageDetection
 import RPi.GPIO as GPIO           # Allows us to call our GPIO pins and names it just GPIO
 import rospy
 

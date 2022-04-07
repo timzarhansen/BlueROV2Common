@@ -3,8 +3,8 @@ import rospy
 from mavros_msgs.msg import Altitude
 from waterlinked_dvl.msg import TransducerReportStamped, PositionReportStamped
 from time import sleep
-from bluerov2common.srv import lightDensity0to10, cameraAngle
-from underwaterslam.srv import resetekf
+from commonbluerovmsg.srv import lightDensity0to10, cameraAngle
+from commonbluerovmsg.srv import resetekf
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import rosservice
 import matplotlib
