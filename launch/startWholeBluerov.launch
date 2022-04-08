@@ -18,6 +18,9 @@
 
     <!-- machine settings-->
     <machine name="pisecondtube" address="10.42.0.150" env-loader="~/catkin_ws/devel/env.sh" user="ubuntu"/>
+
+    <node machine="pisecondtube" name="giverights" pkg="bluerov2common" type="giveRights.sh" />
+
     <!-- Sonar -->
     <node machine="pisecondtube" pkg="tf" type="static_transform_publisher" name="transform_sonar_frame" args="0 0 0 0 0 0 1 map sonar_frame 10" />
     <env name="emulated_sonar" value="false" />
@@ -50,11 +53,12 @@
 
     <!-- IMU-->
     <node  machine="pisecondtube" name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
-        <rosparam command="load" file="$(find xsens_mti_driver)/param/xsens_mti_node.yaml" />
+        <rosparam command="load" file="$(find bluerov2common)/config/xsens_mti_node.yaml" />
     </node>
 
-    <!-- Ekf
-    <include file="$(find bluerov2common)/launch/dvlStart.launch">
-        </include>
-        -->
+    <!-- Ekf -->
+    <node machine="pisecondtube" pkg="underwaterslam" type="EKFDVL" name="EKFDVL" output="screen" required="false">
+        <param name="/imu_used" type="str" value="external" />
+    </node>
+
 </launch>

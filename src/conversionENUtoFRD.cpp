@@ -14,11 +14,14 @@
 class rosConversionClass {
 public:
     rosConversionClass(ros::NodeHandle n_){
-        subscriberImuData = n_.subscribe("mavros/imu/data", 1000, &rosConversionClass::imuCallback, this);
+        subscriberPx4ImuData = n_.subscribe("mavros/imu/data", 1000, &rosConversionClass::imuPx4Callback, this);
         subscriberVelocityBody = n_.subscribe("mavros/local_position/velocity_body", 1000, &rosConversionClass::velocityBodyCallback, this);
         subscriberAltitude = n_.subscribe("mavros/altitude", 1000, &rosConversionClass::altitudeCallback, this);
+        subscriberExternalImuData = n_.subscribe("imu/data", 1000, &rosConversionClass::imuExternalCallback, this);
 
-        publisherImuData = n_.advertise<sensor_msgs::Imu>("mavros/imu/data_frd", 1000);
+
+        publisherPx4ImuData = n_.advertise<sensor_msgs::Imu>("mavros/imu/data_frd", 1000);
+        publisherExternalImuData = n_.advertise<sensor_msgs::Imu>("imu/data_frd", 1000);
         publisherVelocityBody = n_.advertise<geometry_msgs::TwistStamped>("mavros/local_position/velocity_body_frd", 1000);
         publisherAltitude = n_.advertise<mavros_msgs::Altitude>("mavros/altitude_frd", 1000);
 
@@ -28,12 +31,12 @@ public:
     }
 
 private:
-    ros::Subscriber subscriberImuData, subscriberVelocityBody, subscriberAltitude;
-    ros::Publisher publisherAltitude,publisherVelocityBody,publisherImuData;
+    ros::Subscriber subscriberPx4ImuData, subscriberVelocityBody, subscriberAltitude,subscriberExternalImuData;
+    ros::Publisher publisherAltitude,publisherVelocityBody,publisherPx4ImuData,publisherExternalImuData;
     Eigen::Matrix3d transformationX180DegreeRotationMatrix;
     Eigen::Quaterniond transformationX180DegreeQuaternion;
 
-    void imuCallback(const sensor_msgs::Imu::ConstPtr &msg){
+    void imuPx4Callback(const sensor_msgs::Imu::ConstPtr &msg){
         Eigen::Vector3d acceleration(msg->linear_acceleration.x,msg->linear_acceleration.y,msg->linear_acceleration.z);
         acceleration = transformationX180DegreeRotationMatrix*acceleration;
 
@@ -68,10 +71,48 @@ private:
         newMsg.orientation.z = rotationRP.z();//not sure if correct
         newMsg.orientation.w = rotationRP.w();//not sure if correct
 
-        publisherImuData.publish(newMsg);
+        publisherPx4ImuData.publish(newMsg);
 
     }
 
+    void imuExternalCallback(const sensor_msgs::Imu::ConstPtr &msg){
+        Eigen::Vector3d acceleration(msg->linear_acceleration.x,msg->linear_acceleration.y,msg->linear_acceleration.z);
+        acceleration = transformationX180DegreeRotationMatrix*acceleration;
+
+        Eigen::Vector3d rotationVel(msg->angular_velocity.x,msg->angular_velocity.y,msg->angular_velocity.z);
+        rotationVel = transformationX180DegreeRotationMatrix*rotationVel;
+        sensor_msgs::Imu newMsg;
+        newMsg.header = msg->header;
+        newMsg.angular_velocity.x = rotationVel.x();
+        newMsg.angular_velocity.y = rotationVel.y();
+        newMsg.angular_velocity.z = rotationVel.z();
+
+        newMsg.linear_acceleration.x = acceleration.x();
+        newMsg.linear_acceleration.y = acceleration.y();
+        newMsg.linear_acceleration.z = acceleration.z();
+        Eigen::Quaterniond rotationRP(msg->orientation.w,msg->orientation.x,msg->orientation.y,msg->orientation.z);
+
+        Eigen::Vector3d rollPitchYaw = getRollPitchYaw(rotationRP.inverse());
+        // @TODO create low pass filter
+        double rollIMUACCEL = atan2(-msg->linear_acceleration.y,msg->linear_acceleration.z);
+        double pitchIMUACCEL = atan2(msg->linear_acceleration.x,sqrt(msg->linear_acceleration.y*msg->linear_acceleration.y+msg->linear_acceleration.z*msg->linear_acceleration.z));
+//        std::cout << "my Roll: "<< rollIMUACCEL*180/M_PI<< std::endl;
+//        std::cout << "my Pitch: "<< pitchIMUACCEL*180/M_PI<< std::endl;
+
+        //std::cout <<"r: " <<rollPitchYaw(0)*180/M_PI <<" p: " << rollPitchYaw (1)*180/M_PI<< " y: " <<rollPitchYaw(2)*180/M_PI << std::endl;
+        //rollPitchYaw(1)=-rollPitchYaw(1);//only invert pitch
+//        if(abs(rollPitchYaw(0))<M_PI/2){
+//            rollPitchYaw(1)=-rollPitchYaw(1);
+//        }
+        rotationRP = getQuaternionFromRPY(-rollIMUACCEL,pitchIMUACCEL,0);
+        newMsg.orientation.x = rotationRP.x();//not sure if correct
+        newMsg.orientation.y = rotationRP.y();//not sure if correct
+        newMsg.orientation.z = rotationRP.z();//not sure if correct
+        newMsg.orientation.w = rotationRP.w();//not sure if correct
+
+        publisherExternalImuData.publish(newMsg);
+
+    }
     void velocityBodyCallback(const geometry_msgs::TwistStamped::ConstPtr &msg){
 
         Eigen::Vector3d velocityBody(msg->twist.linear.x,msg->twist.linear.y,msg->twist.linear.z);
