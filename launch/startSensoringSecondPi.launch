@@ -1,0 +1,42 @@
+<launch>
+    <!-- Sonar -->
+    <node pkg="tf" type="static_transform_publisher" name="transform_sonar_frame" args="0 0 0 0 0 0 1 map sonar_frame 10" />
+    <env name="emulated_sonar" value="false" />
+    <node pkg="ping360_sonar" type="ping360_node" name="ping360_node" output="screen">
+        <param name="device" value="/dev/ttyUSB1"/>
+        <param name="baudrate" value="2000000"/>
+        <param name="debug" value="False"/>
+        <param name="imgSize" value="500"/>
+        <param name="gain" value="0"/>
+        <param name="step" value="1"/>
+        <param name="numberOfSamples" value="200"/>
+        <param name="transmitFrequency" value="740"/>
+        <param name="sonarRange" value="10"/>
+        <param name="speedOfSound" value="1500"/>
+        <param name="queueSize" value="1"/>
+        <param name="threshold" value="10"/>
+        <param name="enableImageTopic" value="False"/>
+        <param name="enableScanTopic" value="False"/>
+        <param name="enableDataTopic" value="True"/>
+        <param name="maxAngle" value="400"/>
+        <param name="minAngle" value="0"/>
+        <param name="oscillate" value="false"/>
+    </node>
+
+
+    <!-- DVL -->
+    <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" >
+    </node>
+
+
+    <!-- IMU-->
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
+        <rosparam command="load" file="$(find bluerov2common)/config/xsens_mti_node.yaml" />
+    </node>
+
+    <!-- Ekf -->
+    <node pkg="underwaterslam" type="EKFDVL" name="EKFDVL" output="screen" required="false">
+        <param name="/imu_used" type="str" value="external" />
+    </node>
+
+</launch>
