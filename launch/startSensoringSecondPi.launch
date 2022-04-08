@@ -1,4 +1,13 @@
 <launch>
+    
+    
+    
+      <node name="giverights" pkg="bluerov2common" type="giveRights.sh" />
+    
+    
+    
+    
+    
     <!-- Sonar -->
     <node pkg="tf" type="static_transform_publisher" name="transform_sonar_frame" args="0 0 0 0 0 0 1 map sonar_frame 10" />
     <env name="emulated_sonar" value="false" />
