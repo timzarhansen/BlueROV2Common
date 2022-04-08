@@ -1,0 +1,10 @@
+<launch>
+
+    <!-- Start the image data topic as well(in different thread and c++ for speed -->
+    <node pkg="ping360_sonar" type="conversionSonarData" name="conversionSonarData" output="screen" required="true">
+    </node>
+
+    <node pkg="bluerov2common" type="guibluerov2" name="guibluerov2" output="screen" required="true">
+    </node>
+
+</launch>
