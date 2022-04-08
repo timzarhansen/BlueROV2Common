@@ -11,4 +11,7 @@
     </include>
     <include file="$(find bluerov2common)/launch/pwmDriver.launch">
     </include>
+        <node pkg="bluerov2common" type="conversionenutofrd" name="conversionenutofrd" output="screen" required="true">
+    </node>
+    
 </launch>
