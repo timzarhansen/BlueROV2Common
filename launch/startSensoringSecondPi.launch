@@ -49,4 +49,9 @@
     </node>
         <node pkg="bluerov2common" type="conversionenutofrd" name="conversionenutofrd" output="screen" required="true">
     </node>
+
+        <node pkg="bluerov2common" type="controllerbluerov2" name="controllerbluerov2" output="screen" required="true">
+    </node>
+
+
 </launch>
