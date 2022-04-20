@@ -147,7 +147,9 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
 
         tmpDouble = this->currentPitch;
         this->holdPitch =tmpDouble;
+        std::cout << "hold position:" << std::endl;
 
+        std::cout << this->currentYaw << std::endl;
         tmpDouble = this->currentYaw;
         this->holdYaw = tmpDouble;
     }
