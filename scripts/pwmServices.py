@@ -13,7 +13,8 @@ class pwmClass:
     #localPiGPIO = None
     gpioPinServo = None
     gpioPinLight = None
-
+    angleDesired = 0
+    angleCurrent = 0
     def initGPIOPins(self):
         #GPIO.setmode(GPIO.BCM)
 
@@ -35,11 +36,24 @@ class pwmClass:
         return lightDensity0to10Response(True)
 
     def handleAngleServo(self, req):
-        duty = ((req.angle / 180)*108 +71)/180*10
 
-        self.gpioPinLight.hardware_PWM(self.servoPin,50,int(duty*10000))#10000
-
+        self.angleDesired = req.angle
         return cameraAngleResponse(True)
+
+    def controllerAngleServo(self):
+        if self.angleDesired == self.angleCurrent:
+            return
+        tmpAngleDes = 0
+        if abs(self.angleDesired-self.angleCurrent)>1:
+            if self.angleDesired-self.angleCurrent >0:
+                tmpAngleDes = self.angleCurrent+2
+            else:
+                tmpAngleDes = self.angleCurrent-2
+        else:
+            tmpAngleDes = self.angleDesired
+        duty = ((tmpAngleDes / 180)*108 +71)/180*10
+        self.gpioPinLight.hardware_PWM(self.servoPin,50,int(duty*10000))#10000
+        self.angleCurrent = tmpAngleDes
 
     def startLightLEDServer(self):
         s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, self.handleLight)
@@ -64,6 +78,11 @@ if __name__ == "__main__":
         myPwmClass.startServoCameraServer()
 
         rospy.on_shutdown(myPwmClass.shutdownHook)
-        rospy.spin()
+        rate = rospy.Rate(2)
+        while not rospy.is_shutdown():
+
+            myPwmClass.controllerAngleServo()
+            rate.sleep()
+            #rospy.spin()
     except:
         pass

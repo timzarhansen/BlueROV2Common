@@ -6,7 +6,7 @@
 double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP){
 
     double errorInZ = desiredDepthTMP - this->currentDepth;
-
+    //make sure the integrational part is not to high
     if(std::abs(this->integratorHeight+0.1*errorInZ)<0.2){
         this->integratorHeight = this->integratorHeight+0.1*errorInZ;
     }
@@ -120,7 +120,6 @@ Eigen::Vector3d controllerOfBluerov2::getThrustForMavros(double thrust_1, double
     return Eigen::Vector3d(thrust_1, thrust_2, thrust_3);
 }
 
-
 void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg){
     this->desiredDepth = msg->desiredHeight;
     this->desiredYaw = msg->desiredYaw;
@@ -150,7 +149,7 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
         this->holdPitch =tmpDouble;
 
         tmpDouble = this->currentYaw;
-        this->holdYaw = tmpDouble ;
+        this->holdYaw = tmpDouble;
     }
 }
 
