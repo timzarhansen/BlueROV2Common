@@ -72,6 +72,9 @@ target_link_libraries(laserScansToPCL ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 add_executable(conversionenutofrd src/conversionENUtoFRD.cpp)
 target_link_libraries(conversionenutofrd ${catkin_LIBRARIES} Eigen3::Eigen)
 
+add_executable(mavrosHeightCalculation src/heightPublisherFromMavros.cpp)
+target_link_libraries(mavrosHeightCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
+
 add_executable(guibluerov2 src/guiBlueROV2.cpp include/mainwindow.h src/mainwindow.cpp src/rosHandlerGui.cpp include/rosHandlerGui.h include/qcustomplot.h src/qcustomplot.cpp)
 target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport Qt5::Gamepad Eigen3::Eigen ${catkin_LIBRARIES} ${OpenCV_LIBS})
 

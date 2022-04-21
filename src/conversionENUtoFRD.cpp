@@ -20,7 +20,7 @@ public:
         subscriberExternalImuData = n_.subscribe("imu/data", 1000, &rosConversionClass::imuExternalCallback, this);
 
 
-        publisherPx4ImuData = n_.advertise<sensor_msgs::Imu>("mavros/imu/data_frd", 1000);
+        publisherHeightBaro = n_.advertise<sensor_msgs::Imu>("mavros/imu/data_frd", 1000);
         publisherExternalImuData = n_.advertise<sensor_msgs::Imu>("imu/data_frd", 1000);
         publisherVelocityBody = n_.advertise<geometry_msgs::TwistStamped>("mavros/local_position/velocity_body_frd", 1000);
         publisherAltitude = n_.advertise<mavros_msgs::Altitude>("mavros/altitude_frd", 1000);
@@ -32,7 +32,7 @@ public:
 
 private:
     ros::Subscriber subscriberPx4ImuData, subscriberVelocityBody, subscriberAltitude,subscriberExternalImuData;
-    ros::Publisher publisherAltitude,publisherVelocityBody,publisherPx4ImuData,publisherExternalImuData;
+    ros::Publisher publisherAltitude,publisherVelocityBody,publisherHeightBaro,publisherExternalImuData;
     Eigen::Matrix3d transformationX180DegreeRotationMatrix;
     Eigen::Quaterniond transformationX180DegreeQuaternion;
 
@@ -71,7 +71,7 @@ private:
         newMsg.orientation.z = rotationRP.z();//not sure if correct
         newMsg.orientation.w = rotationRP.w();//not sure if correct
 
-        publisherPx4ImuData.publish(newMsg);
+        publisherHeightBaro.publish(newMsg);
 
     }
 
@@ -179,8 +179,12 @@ int main(int argc, char **argv) {
     ros::NodeHandle n_;
     rosConversionClass tmpClass(n_);
 
+    ros::AsyncSpinner spinner(4); // Use 4 threads
+    spinner.start();
 
-    ros::spin();
+    while(ros::ok()){
+        ros::Duration(1.0).sleep();
+    }
 
 
     return (0);
