@@ -32,9 +32,9 @@ void controllerOfBluerov2::controllLogic() {
 
         Eigen::Matrix2d rotationYaw;
         rotationYaw(0,0) = cos(this->currentYaw);
-        rotationYaw(0,1) = -sin(this->currentYaw);
+        rotationYaw(0,1) = sin(this->currentYaw);
         rotationYaw(1,1) = cos(this->currentYaw);
-        rotationYaw(1,0) = sin(this->currentYaw);
+        rotationYaw(1,0) = -sin(this->currentYaw);
         thrust12 = rotationYaw*thrust12;
 
 
@@ -147,9 +147,9 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
 
         tmpDouble = this->currentPitch;
         this->holdPitch =tmpDouble;
-        std::cout << "hold position:" << std::endl;
+        //std::cout << "hold position:" << std::endl;
 
-        std::cout << this->currentYaw << std::endl;
+        //std::cout << this->currentYaw << std::endl;
         tmpDouble = this->currentYaw;
         this->holdYaw = tmpDouble;
     }
