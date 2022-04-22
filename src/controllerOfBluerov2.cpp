@@ -3,18 +3,39 @@
 //
 
 #include "controllerOfBluerov2.h"
-double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP){
+
+void controllerOfBluerov2::callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level) {
+    this->setControllerValues(config.height_i, config.height_d, config.height_p, config.hold_position_p,
+                              config.hold_position_i, config.hold_position_d);
+}
+
+
+double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP) {
 
     double errorInZ = desiredDepthTMP - this->currentDepth;
     //make sure the integrational part is not to high
-    if(std::abs(this->integratorHeight+0.1*errorInZ)<0.2){
-        this->integratorHeight = this->integratorHeight+0.1*errorInZ;
+    if (std::abs(this->integratorHeight + 0.01 * errorInZ) < 0.2) {
+        this->integratorHeight = this->integratorHeight + 0.01 * errorInZ;
     }
 
-    double thrustHeight = 0.5*errorInZ - 0.1*this->currentDepthVel + 0.1*this->integratorHeight;//PID values missing
+    double thrustHeight =
+            this->height_p * errorInZ - this->height_d * this->currentDepthVel + this->height_i * this->integratorHeight;//PID values
     return thrustHeight;
 
 }
+
+void controllerOfBluerov2::setControllerValues(double height_i_tmp, double height_d_tmp, double height_p_tmp,
+                                               double hold_position_p_tmp, double hold_position_i_tmp,
+                                               double hold_position_d_tmp) {
+    this->height_p = height_p_tmp;
+    this->height_i = height_i_tmp;
+    this->height_d = height_d_tmp;
+
+    this->hold_position_p = hold_position_p_tmp;
+    this->hold_position_i = hold_position_i_tmp;
+    this->hold_position_d = hold_position_d_tmp;
+}
+
 void controllerOfBluerov2::controllLogic() {
 //    double roll = 0.0;
 //    double pitch = 0.0;
@@ -23,25 +44,38 @@ void controllerOfBluerov2::controllLogic() {
 //    double thrust_2 = 0.0;
 //    double thrust_3 = 0.1;
 
-    if(this->holdPosition){
+    if (this->holdPosition) {
         double thrustHeight = this->calculateDepthThrust(this->holdDepth);
+        double errorXPosition = this->holdXPosition - this->currentXPosition;
+        double errorYPosition = this->holdYPosition - this->currentYPosition;
 
-        double thrust1 = this->holdXPosition -this->currentXPosition;
-        double thrust2 = this->holdYPosition -this->currentYPosition;
-        Eigen::Vector2d thrust12{thrust1,thrust2};
+
+
+        //make sure the integrational part is not to high
+        if (std::abs(this->integratorX + 0.01 * errorXPosition) < 0.2) {
+            this->integratorX = this->integratorX + 0.01 * errorXPosition;
+        }
+        if (std::abs(this->integratorY + 0.01 * errorYPosition) < 0.2) {
+            this->integratorY = this->integratorY + 0.01 * errorYPosition;
+        }
+
+        double thrust1 = this->hold_position_p*(errorXPosition)+this->hold_position_i*this->integratorX-this->hold_position_d*this->currentXVel;
+        double thrust2 = this->hold_position_p*(errorYPosition)+this->hold_position_i*this->integratorY-this->hold_position_d*this->currentYVel;
+        Eigen::Vector2d thrust12{thrust1, thrust2};
 
         Eigen::Matrix2d rotationYaw;
-        rotationYaw(0,0) = cos(this->currentYaw);
-        rotationYaw(0,1) = sin(this->currentYaw);
-        rotationYaw(1,1) = cos(this->currentYaw);
-        rotationYaw(1,0) = -sin(this->currentYaw);
-        thrust12 = rotationYaw*thrust12;
+        rotationYaw(0, 0) = cos(this->currentYaw);
+        rotationYaw(0, 1) = sin(this->currentYaw);
+        rotationYaw(1, 1) = cos(this->currentYaw);
+        rotationYaw(1, 0) = -sin(this->currentYaw);
+        thrust12 = rotationYaw * thrust12;
 
 
+        Eigen::Vector3d thrustVec = getThrustForMavros(thrust12(0), thrust12(1), thrustHeight);
 
-        Eigen::Vector3d thrustVec = getThrustForMavros(thrust12(0),thrust12(1), thrustHeight);
-
-        Eigen::Quaterniond rotationSend = controllerOfBluerov2::getQuaternionForMavrosFromRPY(this->holdRoll, this->holdPitch, this->holdYaw);
+        Eigen::Quaterniond rotationSend = controllerOfBluerov2::getQuaternionForMavrosFromRPY(this->holdRoll,
+                                                                                              this->holdPitch,
+                                                                                              this->holdYaw);
 
 
         mavros_msgs::AttitudeTarget msg;
@@ -53,19 +87,22 @@ void controllerOfBluerov2::controllLogic() {
         msg.body_rate.x = thrustVec(0);
         msg.body_rate.y = thrustVec(1);
         msg.body_rate.z = thrustVec(2);
-        msg.thrust = 0.4;
+        msg.thrust = 0.1;//this is unused but should be non zero
         //changing the coordinate system
         msg.body_rate.y = -msg.body_rate.y;
         msg.body_rate.z = -msg.body_rate.z;
         this->publisherMavros.publish(msg);
 
 
-    }else{//not holding position
+    } else {//not holding position
 
         double thrustHeight = this->calculateDepthThrust(this->desiredDepth);
-        Eigen::Vector3d thrustVec = getThrustForMavros(this->desiredXThrustBody, this->desiredYThrustBody, thrustHeight);
+        Eigen::Vector3d thrustVec = getThrustForMavros(this->desiredXThrustBody, this->desiredYThrustBody,
+                                                       thrustHeight);
 
-        Eigen::Quaterniond rotationSend = controllerOfBluerov2::getQuaternionForMavrosFromRPY(this->desiredRoll, this->desiredPitch, this->desiredYaw);
+        Eigen::Quaterniond rotationSend = controllerOfBluerov2::getQuaternionForMavrosFromRPY(this->desiredRoll,
+                                                                                              this->desiredPitch,
+                                                                                              this->desiredYaw);
 
 
         mavros_msgs::AttitudeTarget msg;
@@ -77,7 +114,7 @@ void controllerOfBluerov2::controllLogic() {
         msg.body_rate.x = thrustVec(0);
         msg.body_rate.y = thrustVec(1);
         msg.body_rate.z = thrustVec(2);
-        msg.thrust = 0.4;
+        msg.thrust = 0.1;//this is unused but should be non zero
         //changing the coordinate system
         msg.body_rate.y = -msg.body_rate.y;
         msg.body_rate.z = -msg.body_rate.z;
@@ -120,7 +157,7 @@ Eigen::Vector3d controllerOfBluerov2::getThrustForMavros(double thrust_1, double
     return Eigen::Vector3d(thrust_1, thrust_2, thrust_3);
 }
 
-void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg){
+void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg) {
     this->desiredDepth = msg->desiredHeight;
     this->desiredYaw = msg->desiredYaw;
     this->desiredXThrustBody = msg->desiredXThrust;
@@ -130,7 +167,10 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
     bool tmpBool = this->holdPosition;
     this->holdPosition = msg->holdPosition;
     //if hold positions toggled
-    if(this->holdPosition!=tmpBool && this->holdPosition){
+    if (this->holdPosition != tmpBool && this->holdPosition) {
+        this->integratorX = 0;
+        this->integratorY = 0;
+
         //save current position
         double tmpDouble;
         tmpDouble = this->currentXPosition;
@@ -146,16 +186,17 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
         this->holdRoll = tmpDouble;
 
         tmpDouble = this->currentPitch;
-        this->holdPitch =tmpDouble;
+        this->holdPitch = tmpDouble;
         //std::cout << "hold position:" << std::endl;
 
         //std::cout << this->currentYaw << std::endl;
         tmpDouble = this->currentYaw;
         this->holdYaw = tmpDouble;
+
     }
 }
 
-void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg){
+void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
     this->currentXVel = msg->twist.twist.linear.x;
     this->currentYVel = msg->twist.twist.linear.y;
     this->currentDepthVel = msg->twist.twist.linear.z;
@@ -164,13 +205,14 @@ void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::TwistWithCo
     this->currentYawVel = msg->twist.twist.angular.z;
 }
 
-void controllerOfBluerov2::currentPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg){
+void controllerOfBluerov2::currentPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg) {
     this->currentXPosition = msg->pose.pose.position.x;
     this->currentYPosition = msg->pose.pose.position.y;
     this->currentDepth = msg->pose.pose.position.z;
-    Eigen::Quaterniond currentRotation(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+    Eigen::Quaterniond currentRotation(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x,
+                                       msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
     Eigen::Vector3d rollPitchYaw = getRollPitchYaw(currentRotation);
-    this->currentRoll =rollPitchYaw(0);
-    this->currentPitch= rollPitchYaw(1);
+    this->currentRoll = rollPitchYaw(0);
+    this->currentPitch = rollPitchYaw(1);
     this->currentYaw = rollPitchYaw(2);
 }

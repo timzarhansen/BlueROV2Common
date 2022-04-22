@@ -10,6 +10,8 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+#include <bluerov2common/controllerConfig.h>
+#include <dynamic_reconfigure/server.h>
 
 #ifndef BLUEROV2COMMON_CONTROLLEROFBLUEROV2_H
 #define BLUEROV2COMMON_CONTROLLEROFBLUEROV2_H
@@ -27,6 +29,8 @@ public:
 
         publisherMavros = n_.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 10);
         this->integratorHeight = 0;
+        this->integratorX = 0;
+        this->integratorY = 0;
 
         this->desiredXThrustBody = 0;
         this->desiredDepth = 0;
@@ -35,6 +39,7 @@ public:
         this->desiredYThrustBody = 0;
         this->desiredRoll = 0;
         this->desiredPitch = 0;
+
         //startControlLogic with outside Thread
     }
 
@@ -49,6 +54,11 @@ public:
     Eigen::Vector3d getThrustForMavros(double thrust_1, double thrust_2, double thrust_3);
 
     double calculateDepthThrust(double desiredDepthTMP);
+
+    void setControllerValues(double height_i_tmp, double height_d_tmp, double height_p_tmp, double hold_position_p_tmp,
+                             double hold_position_i_tmp, double hold_position_d_tmp);
+
+    void callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level);
 
 private:
     ros::Subscriber subscriberDesiredState, subscriberCurrentPose, subscriberCurrentTwist;
@@ -65,7 +75,10 @@ private:
     //StateToHold:
     std::atomic<double> holdXPosition, holdYPosition, holdDepth, holdRoll, holdPitch, holdYaw;
     //for Control:
-    std::atomic<double> integratorHeight;
+    std::atomic<double> integratorHeight,integratorX,integratorY;
+    // control parameter
+    std::atomic<double> height_i, height_d, height_p, hold_position_p, hold_position_i, hold_position_d;
+
 
     //functions
     void desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg);
