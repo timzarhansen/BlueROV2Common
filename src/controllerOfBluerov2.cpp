@@ -183,10 +183,10 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
         this->holdDepth = tmpDouble;
 
         tmpDouble = this->currentRoll;
-        this->holdRoll = tmpDouble;
+        this->holdRoll = 0;// sould be 0 for now tmpDouble;
 
         tmpDouble = this->currentPitch;
-        this->holdPitch = tmpDouble;
+        this->holdPitch = 0;// sould be 0 for now tmpDouble;
         //std::cout << "hold position:" << std::endl;
 
         //std::cout << this->currentYaw << std::endl;

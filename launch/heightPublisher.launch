@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="bluerov2common" type="mavrosHeightCalculation" name="mavrosHeightCalculation" output="screen" required="false">
+                <param name="/height_mode"  type="str" value="real" />
+    </node>
+</launch>

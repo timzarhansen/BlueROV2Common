@@ -27,6 +27,12 @@ public:
         this->firstMessage = true;
         subscriberPx4Pressure = n_.subscribe("mavros/imu/static_pressure", 1000, &rosConversionClass::heightCallback, this);
         publisherPx4Height = n_.advertise<commonbluerovmsg::heightStamped>("height_baro", 1000);
+
+        if (heightMode=="simulation"){
+            simulationCalculation = true;
+        }else{
+            simulationCalculation = false;
+        }
     }
 
 private:
@@ -34,7 +40,7 @@ private:
     ros::Publisher publisherPx4Height;
     double pressureWhenStarted;
     bool firstMessage;
-
+    bool simulationCalculation;
 
     void heightCallback(const sensor_msgs::FluidPressure::ConstPtr &msg){
         if(this->firstMessage){
@@ -44,7 +50,11 @@ private:
         }
         commonbluerovmsg::heightStamped newMsg;
         newMsg.header.stamp = msg->header.stamp;
-        newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*1000.0f)/(CONSTANTS_ONE_G*1000.0f);//not sure if correct in real/ simulation
+        if(simulationCalculation){
+            newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*1000.0f)/(CONSTANTS_ONE_G*1000.0f);//not sure if correct in real/ simulation / im simulation 1000.0f instead
+        }else{
+            newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);//not sure if correct in real/ simulation / im simulation 1000.0f instead
+        }
         publisherPx4Height.publish(newMsg);
     }
 };
@@ -58,31 +68,31 @@ int main(int argc, char **argv) {
 
 
 
-//    std::string heightMode;
-//
-//    if (n_.getParam("/mavrosHeightCalculation/height_mode", heightMode))
-//    {
-//        ROS_INFO("Height Mode used is: %s", heightMode.c_str());
-//    }
-//    else
-//    {
-//        std::vector<std::string> keys;
-//        n_.getParamNames(keys);
-//
-//        for(int i = 0;i<keys.size();i++){
-//            std::cout << keys[i]<< std::endl;
-//        }
-//        ROS_ERROR("Failed to get heightMode parameter, which to use");
-//    }
-//
-//    if(heightMode != "simulation" && heightMode != "real"){
-//        ROS_ERROR("You have to use simulation or real as parameter for heightMode");
-//        exit(-1);
-//    }
+    std::string heightMode;
+
+    if (n_.getParam("/mavrosHeightCalculation/height_mode", heightMode))
+    {
+        ROS_INFO("Height Mode used is: %s", heightMode.c_str());
+    }
+    else
+    {
+        std::vector<std::string> keys;
+        n_.getParamNames(keys);
+
+        for(int i = 0;i<keys.size();i++){
+            std::cout << keys[i]<< std::endl;
+        }
+        ROS_ERROR("Failed to get heightMode parameter, which to use");
+    }
+
+    if(heightMode != "simulation" && heightMode != "real"){
+        ROS_ERROR("You have to use simulation or real as parameter for heightMode");
+        exit(-1);
+    }
 
 
 
-    rosConversionClass tmpClass(n_,"huhu");//heightMode);
+    rosConversionClass tmpClass(n_,heightMode);//heightMode);
 
 
     ros::spin();

@@ -86,5 +86,5 @@ add_executable(controllerbluerov2 include/controllerOfBluerov2.h src/controllerO
 target_link_libraries(controllerbluerov2 ${catkin_LIBRARIES} Eigen3::Eigen )
 add_dependencies(controllerbluerov2 bluerov2common_gencfg )
 
-add_executable(justChristmasPresentCalculation src/randomTestFOrWeihnachtsgeschenk.cpp )
-target_link_libraries(justChristmasPresentCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
+#add_executable(justChristmasPresentCalculation src/randomTestFOrWeihnachtsgeschenk.cpp )
+#target_link_libraries(justChristmasPresentCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
