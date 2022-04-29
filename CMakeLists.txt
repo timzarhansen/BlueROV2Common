@@ -79,7 +79,7 @@ target_link_libraries(conversionenutofrd ${catkin_LIBRARIES} Eigen3::Eigen)
 add_executable(mavrosHeightCalculation src/heightPublisherFromMavros.cpp)
 target_link_libraries(mavrosHeightCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
 
-add_executable(guibluerov2 src/guiBlueROV2.cpp include/mainwindow.h src/mainwindow.cpp src/rosHandlerGui.cpp include/rosHandlerGui.h include/qcustomplot.h src/qcustomplot.cpp)
+add_executable(guibluerov2 src/gui/guiBlueROV2.cpp src/gui/mainwindow.h src/gui/mainwindow.cpp src/gui/rosHandlerGui.cpp src/gui/rosHandlerGui.h src/gui/qcustomplot.h src/gui/qcustomplot.cpp)
 target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport Qt5::Gamepad Eigen3::Eigen ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(controllerbluerov2 include/controllerOfBluerov2.h src/controllerOfBluerov2.cpp src/controllerRosNode.cpp)

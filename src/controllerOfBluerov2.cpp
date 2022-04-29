@@ -63,6 +63,8 @@ void controllerOfBluerov2::controllLogic() {
         double thrust2 = this->hold_position_p*(errorYPosition)+this->hold_position_i*this->integratorY-this->hold_position_d*this->currentYVel;
         Eigen::Vector2d thrust12{thrust1, thrust2};
 
+
+
         Eigen::Matrix2d rotationYaw;
         rotationYaw(0, 0) = cos(this->currentYaw);
         rotationYaw(0, 1) = sin(this->currentYaw);
@@ -72,6 +74,7 @@ void controllerOfBluerov2::controllLogic() {
 
 
         Eigen::Vector3d thrustVec = getThrustForMavros(thrust12(0), thrust12(1), thrustHeight);
+
 
         Eigen::Quaterniond rotationSend = controllerOfBluerov2::getQuaternionForMavrosFromRPY(this->holdRoll,
                                                                                               this->holdPitch,
@@ -154,7 +157,11 @@ Eigen::Quaterniond controllerOfBluerov2::getQuaternionForMavrosFromRPY(double ro
 }
 
 Eigen::Vector3d controllerOfBluerov2::getThrustForMavros(double thrust_1, double thrust_2, double thrust_3) {
-    return Eigen::Vector3d(thrust_1, thrust_2, thrust_3);
+    Eigen::Vector3d tmpVec(thrust_1, thrust_2, thrust_3);
+    if(tmpVec.norm()>1){
+        tmpVec.normalize();
+    }
+    return tmpVec;
 }
 
 void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg) {
@@ -191,7 +198,7 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
 
         //std::cout << this->currentYaw << std::endl;
         tmpDouble = this->currentYaw;
-        this->holdYaw = tmpDouble;
+         this->holdYaw = tmpDouble;
 
     }
 }

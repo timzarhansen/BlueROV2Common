@@ -51,6 +51,7 @@ private:
         commonbluerovmsg::heightStamped newMsg;
         newMsg.header.stamp = msg->header.stamp;
         if(simulationCalculation){
+           // std::cout << "calculating based on simulation" << std::endl;
             newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*1000.0f)/(CONSTANTS_ONE_G*1000.0f);//not sure if correct in real/ simulation / im simulation 1000.0f instead
         }else{
             newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);//not sure if correct in real/ simulation / im simulation 1000.0f instead

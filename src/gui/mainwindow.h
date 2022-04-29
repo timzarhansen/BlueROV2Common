@@ -145,7 +145,6 @@ public slots:
     void updateL2Button(bool pressed);
 
 
-
 public:
 signals:
 
@@ -166,6 +165,7 @@ private:
     QLabel *lightLabel, *cameraImageLabel, *lightTicks, *currentLightIntensity, *cameraAngleLabel;
     QLabel *currentCameraAngle, *cameraAngleTicks;
     QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel;
+    QLabel *currentPositionZLabel, *currentPositionLabel, *currentPositionYawLabel;
     QPushButton *resetEKF, *holdPos, *resetGraphEKF;
     QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
     int sonarRange, sonarStepSize, lightIntensity, cameraAngleDesired;
@@ -242,7 +242,7 @@ private:
         resetGraphEKF = new QPushButton("Reset Graph", this);
 //         set size and location of the button
         resetGraphEKF->setGeometry(
-                QRect(QPoint(distanceFromLeftCorner + sizePlot/2 - sizeButtons/2, 500), QSize(sizeButtons, 40)));
+                QRect(QPoint(distanceFromLeftCorner + sizePlot / 2 - sizeButtons / 2, 500), QSize(sizeButtons, 40)));
         connect(resetGraphEKF, &QPushButton::released, this, &MainWindow::handleResetEKFGraph);
 
 
@@ -333,7 +333,7 @@ private:
         if (gamepads.isEmpty()) {
             qDebug() << "Did not find any connected gamepads";
             this->connectedGamepad = false;
-        }else{
+        } else {
             this->connectedGamepad = true;
         }
 
@@ -355,7 +355,7 @@ private:
 //        connect(this->m_gamepad, &QGamepad::buttonStartChanged, this, );
 //        connect(this->m_gamepad, &QGamepad::buttonGuideChanged, this, );
         int xPositionOfLabels = 200;
-        int yPositionOfLabels = 350;
+        int yPositionOfLabels = 300;
         currentXThrustLabel = new QLabel("Thrust X: ", this);
         currentXThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels), QSize(100, 50)));
 
@@ -377,23 +377,33 @@ private:
         currentDesiredYawLabel->setGeometry(
                 QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 50), QSize(100, 50)));
 
+        currentPositionLabel = new QLabel("Current Position : ", this);
+        currentPositionLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 100), QSize(200, 50)));
+
+        currentPositionZLabel = new QLabel("Height: ", this);
+        currentPositionZLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 150), QSize(150, 50)));
+
+        currentPositionYawLabel = new QLabel("Yaw: ", this);
+        currentPositionYawLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 150), QSize(150, 50)));
 
     }
 
-    static QVector<double> keepEveryNthElementWithAverage(std::vector<double> array, int nthElement,int holdLastPositions){
+    static QVector<double>
+    keepEveryNthElementWithAverage(std::vector<double> array, int nthElement, int holdLastPositions) {
         QVector<double> output;
         double av = 0;
 
 //        if(nthElement>1){
 //            std::cout << "Starting For Loop: "<< nthElement << std::endl;
 //        }
-        int howOften=1;
-        for (int i = 0; i < array.size()-holdLastPositions; i++)
-        {
+        int howOften = 1;
+        for (int i = 0; i < array.size() - holdLastPositions; i++) {
             av += array[i];
 
-            if (i % nthElement == 0)
-            {
+            if (i % nthElement == 0) {
 
                 output.append(av / ((double) howOften));
                 av = 0; // reset sum for next average
@@ -401,7 +411,7 @@ private:
             }
             howOften++;
         }
-        for (int i = array.size()-holdLastPositions; i < array.size(); i++){
+        for (int i = array.size() - holdLastPositions; i < array.size(); i++) {
             output.append(array[i]);
         }
 

@@ -99,6 +99,9 @@ void MainWindow::handleHoldPosition() {
         pal.setColor(QPalette::Button, QColor(Qt::green));
     }else{
         pal.setColor(QPalette::Button, QColor(Qt::red));
+
+        double tmpNumber = this->currentYaw;
+        this->desiredYaw = tmpNumber;
     }
 
     this->holdPos->setAutoFillBackground(true);
@@ -154,7 +157,9 @@ void MainWindow::updateRightY(double value) {
 //yaw rotation
 void MainWindow::updateLeftX(double value) {
 //    std::cout << "Left X: " << value << std::endl;
-    this->desiredYaw = this->desiredYaw + 0.01 * value;
+    if(abs(value)>0.05){
+        this->desiredYaw = this->desiredYaw + 0.01 * value;
+    }
     //make sure to hold yaw in range of +- pi
     if (this->desiredYaw > M_PI) {
         this->desiredYaw = this->desiredYaw - 2 * M_PI;
@@ -230,8 +235,8 @@ void MainWindow::updateR1Button(bool pressed) {
 //    std::cout << "R1 button Pressed: " << pressed << std::endl;
 
     if (pressed) {
-        if (abs(this->desiredHeight - 0.1 - this->currentHeight) < 1.0f) {
-            this->desiredHeight = this->desiredHeight - 0.1;
+        if (abs(this->desiredHeight - 0.02 - this->currentHeight) < 1.0f) {
+            this->desiredHeight = this->desiredHeight - 0.02;
         }
         QString xstr = "Height: " + QString::number(this->desiredHeight, 'f', 2);
         this->currentHeightDesiredLabel->setText(xstr);
@@ -242,8 +247,8 @@ void MainWindow::updateR1Button(bool pressed) {
 void MainWindow::updateR2Button(double pressedValue) {
 //    std::cout << "R2 button Pressed: " << pressedValue << std::endl;
     if (pressedValue>0.2) {
-        if (abs(this->desiredHeight + 0.1 - this->currentHeight) < 1.0f) {
-            this->desiredHeight = this->desiredHeight + 0.1;
+        if (abs(this->desiredHeight + 0.02 - this->currentHeight) < 1.0f) {
+            this->desiredHeight = this->desiredHeight + 0.02;
         }
         QString xstr = "Height: " + QString::number(this->desiredHeight, 'f', 2);
         this->currentHeightDesiredLabel->setText(xstr);
@@ -257,9 +262,14 @@ void MainWindow::updateL2Button(bool pressed) { std::cout << "L2 button Pressed:
 void MainWindow::updateStateOfRobot(double xPos, double yPos, double zPos, double roll, double pitch, double yaw,
                                     Eigen::MatrixXd covariance) {
     this->currentHeight = zPos;
+    QString xstr = "Height: " + QString::number(this->currentHeight, 'f', 2);
+    this->currentPositionZLabel->setText(xstr);
+
     this->currentRoll = roll;
     this->currentPitch = pitch;
     this->currentYaw = yaw;
+    xstr = "Yaw: " + QString::number(this->currentYaw*180/M_PI, 'f', 2);
+    this->currentPositionYawLabel->setText(xstr);
     this->currentXPos = xPos;
     this->currentYPos = yPos;
 }
