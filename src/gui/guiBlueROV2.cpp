@@ -40,5 +40,8 @@ int main(int argc, char *argv[])
     QObject::connect(&mainWindow, &MainWindow::updateAngleCamera, &rosHandler, &rosHandlerGui::updateAngleCamera);
     QObject::connect(&mainWindow, &MainWindow::updateLightIntensity, &rosHandler, &rosHandlerGui::updateLightIntensity);
 
+
+
+
     return app.exec();
 }

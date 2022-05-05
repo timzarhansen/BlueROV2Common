@@ -204,6 +204,7 @@ private:
         connect(rangeSonarSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarSlider);
         connect(rangeSonarSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarSliderReleased);
         this->rangeSonarSlider->setSliderPosition(30);
+
         //angular Step size
         yposRangeSonar = yposRangeSonar + 150;
         angularStepSizeSlider = new QSlider(Qt::Horizontal, this);
@@ -223,6 +224,8 @@ private:
         connect(angularStepSizeSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarStepSlider);
         connect(angularStepSizeSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarStepReleased);
         this->angularStepSizeSlider->setSliderPosition(5);
+        //send initial values to sonar
+        this->handleSonarSliderReleased();
     }
 
     void initializationCurrentPosition(int screenWidth) {
@@ -326,6 +329,10 @@ private:
         connect(this->cameraAngleSlider, &QSlider::valueChanged, this, &MainWindow::handleCameraAngleSlider);
         connect(this->cameraAngleSlider, &QSlider::sliderReleased, this, &MainWindow::handleCameraAngleSliderReleased);
         this->cameraAngleSlider->setSliderPosition(90);
+
+        //send initial values to robot
+        this->handleCameraAngleSliderReleased();
+        this->handleLightSliderReleased();
     }
 
     void initializationGamepad(int screenWidth) {
@@ -362,18 +369,18 @@ private:
         currentYThrustLabel = new QLabel("Thrust Y: ", this);
         currentYThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels), QSize(100, 50)));
 
-        currentHeightDesiredLabel = new QLabel("Height : ", this);
+        currentHeightDesiredLabel = new QLabel("Height: 0.00", this);
         currentHeightDesiredLabel->setGeometry(
                 QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels), QSize(100, 50)));
 
-        currentDesiredRollLabel = new QLabel("Roll: ", this);
+        currentDesiredRollLabel = new QLabel("Roll: 0.00", this);
         currentDesiredRollLabel->setGeometry(
                 QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 50), QSize(100, 50)));
 
-        currentDesiredPitchLabel = new QLabel("Pitch: ", this);
+        currentDesiredPitchLabel = new QLabel("Pitch: 0.00", this);
         currentDesiredPitchLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 50), QSize(100, 50)));
 
-        currentDesiredYawLabel = new QLabel("Yaw: ", this);
+        currentDesiredYawLabel = new QLabel("Yaw: 0.00", this);
         currentDesiredYawLabel->setGeometry(
                 QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 50), QSize(100, 50)));
 

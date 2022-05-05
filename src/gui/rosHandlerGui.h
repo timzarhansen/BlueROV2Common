@@ -38,11 +38,11 @@ class rosHandlerGui: public QObject {
     Q_OBJECT
 public:
     rosHandlerGui(ros::NodeHandle n_)  {
-        subscriberPosRobot = n_.subscribe("publisherPoseEkf",1000,&rosHandlerGui::positionCallback,this);
-        subscriberSonarImage = n_.subscribe("sonar/image",1000,&rosHandlerGui::sonarImageCallback,this);
+        subscriberPosRobot = n_.subscribe("publisherPoseEkf",0,&rosHandlerGui::positionCallback,this);
+        subscriberSonarImage = n_.subscribe("sonar/image",0,&rosHandlerGui::sonarImageCallback,this);
 //        subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
-        subscriberCameraImage = n_.subscribe("camera/image_raw/compressed",1000,&rosHandlerGui::cameraImageCallback,this);
-        publishingDesiredState = n_.advertise<commonbluerovmsg::desiredStateForRobot>("desiredStateOfBluerov2", 10);
+        subscriberCameraImage = n_.subscribe("camera/image_raw/compressed",0,&rosHandlerGui::cameraImageCallback,this);
+        publishingDesiredState = n_.advertise<commonbluerovmsg::desiredStateForRobot>("desiredStateOfBluerov2", 0);
         clientEKF = n_.serviceClient<commonbluerovmsg::resetekf>("resetCurrentEKF");
         clientSonar = n_.serviceClient<ping360_sonar::sendingSonarConfig>("changeParametersSonar");
         clientLight = n_.serviceClient<commonbluerovmsg::lightDensity0to10>("set_light_of_leds_0_to_10");

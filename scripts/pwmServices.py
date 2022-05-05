@@ -13,8 +13,8 @@ class pwmClass:
     #localPiGPIO = None
     gpioPinServo = None
     gpioPinLight = None
-    angleDesired = 0
-    angleCurrent = 0
+    angleDesired = 90
+    angleCurrent = 90
     def initGPIOPins(self):
         #GPIO.setmode(GPIO.BCM)
 

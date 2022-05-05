@@ -43,7 +43,7 @@ public:
         //startControlLogic with outside Thread
     }
 
-    void controllLogic();
+    Eigen::Vector3d controllLogic();
 
     static Eigen::Vector3d getRollPitchYaw(Eigen::Quaterniond quat);
 
@@ -59,6 +59,10 @@ public:
                              double hold_position_i_tmp, double hold_position_d_tmp);
 
     void callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level);
+
+    void getPoseRobot( Eigen::Vector3d &position, Eigen::Quaterniond &rotation);
+
+    void getPoseTarget(Eigen::Vector3d &position, Eigen::Quaterniond &rotation);
 
 private:
     ros::Subscriber subscriberDesiredState, subscriberCurrentPose, subscriberCurrentTwist;

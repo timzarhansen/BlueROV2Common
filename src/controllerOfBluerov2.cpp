@@ -36,14 +36,14 @@ void controllerOfBluerov2::setControllerValues(double height_i_tmp, double heigh
     this->hold_position_d = hold_position_d_tmp;
 }
 
-void controllerOfBluerov2::controllLogic() {
+Eigen::Vector3d controllerOfBluerov2::controllLogic() {
 //    double roll = 0.0;
 //    double pitch = 0.0;
 //    double yaw = 0.0;
 //    double thrust_1 = -0.5;
 //    double thrust_2 = 0.0;
 //    double thrust_3 = 0.1;
-
+    Eigen::Vector3d returnThrust;
     if (this->holdPosition) {
         double thrustHeight = this->calculateDepthThrust(this->holdDepth);
         double errorXPosition = this->holdXPosition - this->currentXPosition;
@@ -62,9 +62,10 @@ void controllerOfBluerov2::controllLogic() {
         double thrust1 = this->hold_position_p*(errorXPosition)+this->hold_position_i*this->integratorX-this->hold_position_d*this->currentXVel;
         double thrust2 = this->hold_position_p*(errorYPosition)+this->hold_position_i*this->integratorY-this->hold_position_d*this->currentYVel;
         Eigen::Vector2d thrust12{thrust1, thrust2};
-
-
-
+        returnThrust[0] = thrust1;
+        returnThrust[1] = thrust2;
+        returnThrust[2] = thrustHeight;
+        //conversion from global to body
         Eigen::Matrix2d rotationYaw;
         rotationYaw(0, 0) = cos(this->currentYaw);
         rotationYaw(0, 1) = sin(this->currentYaw);
@@ -100,6 +101,11 @@ void controllerOfBluerov2::controllLogic() {
     } else {//not holding position
 
         double thrustHeight = this->calculateDepthThrust(this->desiredDepth);
+        Eigen::Quaterniond currentRotation = controllerOfBluerov2::getQuaternionFromRPY(this->currentRoll,this->currentPitch,this->currentYaw);
+        returnThrust[0] = this->desiredXThrustBody;
+        returnThrust[1] = this->desiredYThrustBody;
+        returnThrust[2] = thrustHeight;
+        returnThrust = currentRotation*returnThrust;
         Eigen::Vector3d thrustVec = getThrustForMavros(this->desiredXThrustBody, this->desiredYThrustBody,
                                                        thrustHeight);
 
@@ -123,6 +129,8 @@ void controllerOfBluerov2::controllLogic() {
         msg.body_rate.z = -msg.body_rate.z;
         this->publisherMavros.publish(msg);
     }
+
+    return returnThrust;
 }
 
 Eigen::Vector3d controllerOfBluerov2::getRollPitchYaw(Eigen::Quaterniond quat) {
@@ -186,7 +194,7 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
         tmpDouble = this->currentYPosition;
         this->holdYPosition = tmpDouble;
 
-        tmpDouble = this->currentDepth;
+        tmpDouble = this->desiredDepth;
         this->holdDepth = tmpDouble;
 
         tmpDouble = this->currentRoll;
@@ -223,3 +231,20 @@ void controllerOfBluerov2::currentPoseCallback(const geometry_msgs::PoseWithCova
     this->currentPitch = rollPitchYaw(1);
     this->currentYaw = rollPitchYaw(2);
 }
+
+void controllerOfBluerov2::getPoseRobot( Eigen::Vector3d &position, Eigen::Quaterniond &rotation){
+    position.x() = this->currentXPosition;
+    position.y() = this->currentYPosition;
+    position.z() = this->currentDepth;
+    rotation = getQuaternionFromRPY(this->currentRoll,this->currentPitch,this->currentYaw);
+}
+
+void controllerOfBluerov2::getPoseTarget(Eigen::Vector3d &position, Eigen::Quaterniond &rotation){
+    position.x() = this->holdXPosition;
+    position.y() = this->holdYPosition;
+    position.z() = this->holdDepth;
+    rotation = getQuaternionFromRPY(this->holdRoll,this->holdPitch,this->holdYaw);
+}
+
+
+
