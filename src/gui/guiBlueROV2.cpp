@@ -2,9 +2,9 @@
 #include "mainwindow.h"
 
 
-void init(){
-    ros::spin();
-}
+//void init(){
+//    ros::spin();
+//}
 
 
 int main(int argc, char *argv[])
@@ -13,7 +13,9 @@ int main(int argc, char *argv[])
     ros::start();
     ros::NodeHandle n_;
     rosHandlerGui rosHandler(n_);
-    std::thread t1(init);
+//    std::thread t1(init);
+    ros::AsyncSpinner spinner(4); // Use 4 threads
+    spinner.start();
 
     QApplication app(argc, argv);
     qRegisterMetaType<Eigen::MatrixXd>("Eigen::MatrixXd");
