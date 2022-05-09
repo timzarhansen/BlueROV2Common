@@ -57,7 +57,7 @@
     </node>
 
     <!-- Ekf -->
-    <node machine="pisecondtube" pkg="underwaterslam" type="EKFDVL" name="EKFDVL" output="screen" required="false">
+    <node machine="pisecondtube" pkg="bluerov2common" type="EKFDVL" name="EKFDVL" output="screen" required="false">
         <param name="/imu_used" type="str" value="external" />
     </node>
 

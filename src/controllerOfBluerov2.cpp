@@ -2,7 +2,7 @@
 // Created by tim-linux on 22.12.21.
 //
 
-#include "controllerOfBluerov2.h"
+#include "controller/controllerOfBluerov2.h"
 
 void controllerOfBluerov2::callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level) {
     this->setControllerValues(config.height_i, config.height_d, config.height_p, config.hold_position_p,

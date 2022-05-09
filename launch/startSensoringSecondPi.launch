@@ -44,7 +44,7 @@
     </node>
 
     <!-- Ekf -->
-    <node pkg="underwaterslam" type="EKFDVL" name="EKFDVL" output="screen" required="false">
+    <node pkg="bluerov2common" type="EKFDVL" name="EKFDVL" output="screen" required="false">
         <param name="/imu_used" type="str" value="external" />
         <param name="/dvl_used"  type="str" value="external" />
     </node>
