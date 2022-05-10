@@ -39,9 +39,27 @@ public:
             std::cout << "External DVL used for EKF" << std::endl;
             this->subscriberDVL = n_.subscribe("dvl/transducer_report", 1000, &rosClassEKF::DVLCallbackDVL, this);
         } else {
-            std::cout << "Mavros IMU used for EKF" << std::endl;
-            this->subscriberVelocityMavros = n_.subscribe("simulatedDVL", 1000, &rosClassEKF::DVLCallbackSimulation,
-                                                          this);
+            if(dvlUsage == "gazebo"){
+                std::cout << "Gazebo DVL used for EKF" << std::endl;
+                this->subscriberVelocitySimulation = n_.subscribe("simulatedDVL", 1000, &rosClassEKF::DVLCallbackSimulation,
+                                                                  this);
+            }else{
+
+                if(dvlUsage == "mavros") {
+
+                    std::cout << "Gazebo DVL used for EKF" << std::endl;
+                    this->subscriberVelocityMavros = n_.subscribe("mavros/local_position/velocity_body_frd", 1000, &rosClassEKF::DVLCallbackMavros,
+                                                                      this);
+
+
+                }else{
+                    std::cout << "no matching DVL usage found" << std::endl;
+                    exit(-1);
+                }
+
+                }
+
+
         }
         this->subscriberDepth = n_.subscribe("height_baro", 1000, &rosClassEKF::depthSensorCallback, this);
         this->subscriberHeading = n_.subscribe("magnetic_heading", 1000, &rosClassEKF::headingCallback, this);
@@ -59,7 +77,7 @@ private:
 //    std::deque<mavros_msgs::Altitude::ConstPtr> depthDeque;
 //    std::deque<geometry_msgs::TwistStamped::ConstPtr> dvlDeque;
     ekfClassDVL currentEkf;
-    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults, subscriberVelocityMavros;
+    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults, subscriberVelocitySimulation,subscriberVelocityMavros;
     ros::Publisher publisherPoseEkf, publisherTwistEkf;
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
@@ -144,6 +162,19 @@ private:
         this->DVLCallbackSimulationHelper(msg);
         this->updateSlamMutex.unlock();
     }
+
+    void DVLCallbackMavrosHelper(const geometry_msgs::TwistStamped::ConstPtr &msg) {
+        this->currentEkf.updateDVL(msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z, Eigen::Quaterniond(1, 0, 0, 0),
+                                   msg->header.stamp);
+    }
+
+    void DVLCallbackMavros(const geometry_msgs::TwistStamped::ConstPtr &msg) {
+        this->updateSlamMutex.lock();
+        this->DVLCallbackMavrosHelper(msg);
+        this->updateSlamMutex.unlock();
+    }
+
+
 
     bool resetEKF(commonbluerovmsg::resetekf::Request &req, commonbluerovmsg::resetekf::Response &res) {
         this->updateSlamMutex.lock();
@@ -234,8 +265,8 @@ int main(int argc, char **argv) {
         ROS_ERROR("Failed to get IMU parameter, which to use");
     }
 
-    if (whichIMUUsed != "external" && whichIMUUsed != "px4") {
-        ROS_ERROR("You have to use px4 or external as parameter for imu_used");
+    if (whichIMUUsed != "external" && whichIMUUsed != "mavros") {
+        ROS_ERROR("You have to use mavros or external as parameter for imu_used");
         exit(-1);
     }
 
@@ -254,8 +285,8 @@ int main(int argc, char **argv) {
         ROS_ERROR("Failed to get DVL parameter, which to use");
     }
 
-    if (whichDVLUsed != "external" && whichDVLUsed != "gazebo") {
-        ROS_ERROR("You have to use gazebo or external as parameter for dvl_used");
+    if (whichDVLUsed != "external" && whichDVLUsed != "gazebo" && whichDVLUsed != "mavros") {
+        ROS_ERROR("You have to use gazebo or external or mavros as parameter for dvl_used");
         exit(-1);
     }
 
