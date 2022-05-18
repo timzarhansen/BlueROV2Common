@@ -35,6 +35,7 @@ Eigen::Quaterniond generalHelpfulTools::getQuaternionFromRPY(double roll, double
 //        q = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
 //            * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
 //            * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+    q.normalize();
     return q;
 }
 

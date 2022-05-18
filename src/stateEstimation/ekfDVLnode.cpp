@@ -195,6 +195,7 @@ private:
     };
 
     void headingCallback(const geometry_msgs::Vector3Stamped::ConstPtr &msg) {
+
         this->updateSlamMutex.lock();
         this->headingHelper(msg);
         this->updateSlamMutex.unlock();
