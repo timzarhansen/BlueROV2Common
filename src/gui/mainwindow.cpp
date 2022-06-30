@@ -141,7 +141,7 @@ void MainWindow::handleCameraAngleSliderReleased() {
 //move x body axis
 void MainWindow::updateRightX(double value) {
 //    std::cout << "Right X: " << value << std::endl;
-    this->desiredYMovement = 0.5 * value;
+    this->desiredYMovement = 0.75 * value;
     QString xstr = "Thrust Y: " + QString::number(this->desiredYMovement, 'f', 2);
     this->currentYThrustLabel->setText(xstr);
 }
@@ -149,7 +149,7 @@ void MainWindow::updateRightX(double value) {
 //move y body axis
 void MainWindow::updateRightY(double value) {
 //    std::cout << "Right Y: " << value << std::endl;
-    this->desiredXMovement = -0.5 * value;
+    this->desiredXMovement = -0.75 * value;
     QString xstr = "Thrust X: " + QString::number(this->desiredXMovement, 'f', 2);
     this->currentXThrustLabel->setText(xstr);
 }
