@@ -99,8 +99,8 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
 def main():
     rospy.init_node('drive_scenario_01')
     rospack = rospkg.RosPack()
-    data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list.csv'
-    #data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list_with_angles.csv'
+    #data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list.csv'
+    data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list_with_angles.csv'
     try:
         with open(data_path, 'r') as f:
             reader = csv.reader(f, delimiter=',')

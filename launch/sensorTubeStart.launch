@@ -1,12 +1,7 @@
 <launch>
-    
-    
-    
-      <node name="giverights" pkg="bluerov2common" type="giveRights.sh" />
-    
-    
-    
-    
+
+    <node name="giverights" pkg="bluerov2common" type="giveRights.sh" />
+
     
     <!-- Sonar -->
     <node pkg="tf" type="static_transform_publisher" name="transform_sonar_frame" args="0 0 0 0 0 0 1 map sonar_frame 10" />
@@ -35,6 +30,7 @@
 
     <!-- DVL -->
     <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" required="true">
+        <param name="ip" value="10.42.0.211"/>
     </node>
 
 

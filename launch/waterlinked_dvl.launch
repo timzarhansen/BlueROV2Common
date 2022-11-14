@@ -1,0 +1,7 @@
+<launch>
+
+    <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" required="true">
+        <param name="ip" value="10.42.0.211"/>
+    </node>
+
+</launch>

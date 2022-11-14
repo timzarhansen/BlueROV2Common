@@ -67,6 +67,9 @@ void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {
     imgIn = imgIn.rgbSwapped();
     QPixmap myPixMap = QPixmap::fromImage(imgIn);
     emit updateSonarImageROS(myPixMap);
+
+
+
 }
 
 void rosHandlerGui::cameraImageCallback(const sensor_msgs::CompressedImagePtr &msg) {
