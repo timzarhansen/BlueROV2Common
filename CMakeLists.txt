@@ -91,6 +91,7 @@ add_dependencies(controllerbluerov2 bluerov2common_gencfg )
 add_executable(EKFDVL src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/generalTools/generalHelpfulTools.h src/generalTools/generalHelpfulTools.cpp)
 target_link_libraries(EKFDVL Eigen3::Eigen  ${catkin_LIBRARIES})
 
-
+add_executable(randomTest src/randomTestFile.cpp src/generalTools/generalHelpfulTools.h src/generalTools/generalHelpfulTools.cpp)
+target_link_libraries(randomTest Eigen3::Eigen  ${catkin_LIBRARIES})
 #add_executable(justChristmasPresentCalculation src/randomTestFOrWeihnachtsgeschenk.cpp )
 #target_link_libraries(justChristmasPresentCalculation ${catkin_LIBRARIES} Eigen3::Eigen)

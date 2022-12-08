@@ -60,11 +60,22 @@ void MainWindow::handleSonarSlider(int sonarRange) {
 
 }
 
+
+
 void MainWindow::handleSonarSliderReleased() {
     //send current distance to the Sonar
 //    std::cout << "sonarRange send to Sonar: " << this->sonarRange << std::endl;
     emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange);
 }
+
+void MainWindow::handleStrengthXYMovementSlider(int strength) {
+    QString xstr = QString::number(((double) strength)/10.0);
+    this->strengthXYMovement = ((double) strength)/10.0;
+    this->currentStrengthXYMovement->setText(xstr);
+}
+
+
+
 
 void MainWindow::handleSonarStepSlider(int angularStepSize) {
     QString xstr = QString::number(angularStepSize);
@@ -141,7 +152,7 @@ void MainWindow::handleCameraAngleSliderReleased() {
 //move x body axis
 void MainWindow::updateRightX(double value) {
 //    std::cout << "Right X: " << value << std::endl;
-    this->desiredYMovement = 0.75 * value;
+    this->desiredYMovement = this->strengthXYMovement * value;
     QString xstr = "Thrust Y: " + QString::number(this->desiredYMovement, 'f', 2);
     this->currentYThrustLabel->setText(xstr);
 }
@@ -149,7 +160,7 @@ void MainWindow::updateRightX(double value) {
 //move y body axis
 void MainWindow::updateRightY(double value) {
 //    std::cout << "Right Y: " << value << std::endl;
-    this->desiredXMovement = -0.75 * value;
+    this->desiredXMovement = -this->strengthXYMovement * value;
     QString xstr = "Thrust X: " + QString::number(this->desiredXMovement, 'f', 2);
     this->currentXThrustLabel->setText(xstr);
 }
@@ -169,6 +180,8 @@ void MainWindow::updateLeftX(double value) {
     }
     QString xstr = "Yaw: " + QString::number(this->desiredYaw * 180 / M_PI, 'f', 2);
     this->currentDesiredYawLabel->setText(xstr);
+    this->currentDesiredYawLabel->update();
+//    std::cout<< "AFTER UPDATE YAW DES" << std::endl;
 }
 
 void MainWindow::updateLeftY(double value) { std::cout << "Left Y: " << value << std::endl; }//nothing
@@ -256,6 +269,7 @@ void MainWindow::updateR2Button(double pressedValue) {
 }
 
 void MainWindow::updateL1Button(bool pressed) { std::cout << "L1 button Pressed: " << pressed << std::endl; }//nothing
+
 void MainWindow::updateL2Button(bool pressed) { std::cout << "L2 button Pressed: " << pressed << std::endl; }//nothing
 
 
@@ -270,6 +284,39 @@ void MainWindow::updateStateOfRobot(double xPos, double yPos, double zPos, doubl
     this->currentYaw = yaw;
     xstr = "Yaw: " + QString::number(this->currentYaw*180/M_PI, 'f', 2);
     this->currentPositionYawLabel->setText(xstr);
+    this->currentPositionYLabel->update();
+//    std::cout<< "AFTER UPDATE YAW CURRENT" << std::endl;
+
     this->currentXPos = xPos;
     this->currentYPos = yPos;
+
+
+    xstr = "X: " + QString::number(this->currentXPos, 'f', 2);
+    this->currentPositionXLabel->setText(xstr);
+
+    xstr = "Y: " + QString::number(this->currentYPos, 'f', 2);
+    this->currentPositionYLabel->setText(xstr);
+
+    xstr = "Roll: " + QString::number(roll, 'f', 2);
+    this->currentPositionRollLabel->setText(xstr);
+
+    xstr = "Pitch: " + QString::number(pitch, 'f', 2);
+    this->currentPositionPitchLabel->setText(xstr);
+
+}
+
+
+void MainWindow::updateDVLState(double distance1, double distance2, double distance3, double distance4){
+
+
+
+    QString xstr = "Distance 1:    " + QString::number(distance1, 'f', 2);
+    this->currentDistanceDVL1->setText(xstr);
+    xstr = "Distance 2:    " + QString::number(distance2, 'f', 2);
+    this->currentDistanceDVL2->setText(xstr);
+    xstr = "Distance 3:    " + QString::number(distance3, 'f', 2);
+    this->currentDistanceDVL3->setText(xstr);
+    xstr = "Distance 4:    " + QString::number(distance4, 'f', 2);
+    this->currentDistanceDVL4->setText(xstr);
+
 }

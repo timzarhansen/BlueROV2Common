@@ -4,7 +4,7 @@
 
 #include "rosHandlerGui.h"
 
-void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar){
+void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar) {
     ping360_sonar::sendingSonarConfig srv;
     srv.request.range = rangeSonar;
     srv.request.stepSize = stepSize;
@@ -37,13 +37,21 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
                                      rollPitchYaw[0], rollPitchYaw[1], rollPitchYaw[2], covariance);
 }
 
-void rosHandlerGui::updateAngleCamera(int angleCamera){
+
+void rosHandlerGui::DVLCallback(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
+
+    emit updateDVLStateROS(msg->report.transducers[0].distance, msg->report.transducers[1].distance,
+                           msg->report.transducers[2].distance, msg->report.transducers[3].distance);
+}
+
+
+void rosHandlerGui::updateAngleCamera(int angleCamera) {
     commonbluerovmsg::cameraAngle srv;
     srv.request.angle = angleCamera;
     this->clientCameraAngle.call(srv);
 }
 
-void rosHandlerGui::updateLightIntensity(int intensityLight){
+void rosHandlerGui::updateLightIntensity(int intensityLight) {
     commonbluerovmsg::lightDensity0to10 srv;
     srv.request.intensity = intensityLight;
     this->clientLight.call(srv);
@@ -59,15 +67,15 @@ void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {
         return;
     }
 
-    cv_ptr = cv_bridge::cvtColor(cv_ptr,"rgb8");
+    cv_ptr = cv_bridge::cvtColor(cv_ptr, "rgb8");
 
+    cv::applyColorMap(cv_ptr->image, cv_ptr->image, cv::COLORMAP_JET);
     QImage imgIn = QImage((uchar *) cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step,
                           QImage::Format_RGB888);
 //    QImage imgIn = QImage(&msg->data[0], msg->width, msg->height, QImage::Format_RGB888);
     imgIn = imgIn.rgbSwapped();
     QPixmap myPixMap = QPixmap::fromImage(imgIn);
     emit updateSonarImageROS(myPixMap);
-
 
 
 }
@@ -82,7 +90,7 @@ void rosHandlerGui::cameraImageCallback(const sensor_msgs::CompressedImagePtr &m
         return;
     }
 
-    cv_ptr = cv_bridge::cvtColor(cv_ptr,"rgb8");
+    cv_ptr = cv_bridge::cvtColor(cv_ptr, "rgb8");
 
     QImage imgIn = QImage((uchar *) cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step,
                           QImage::Format_RGB888);
@@ -110,8 +118,8 @@ void rosHandlerGui::updateDesiredState(double desiredHeight, double desiredRoll,
 
 }
 
-void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph){
-    if(not resetOnlyGraph){
+void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph) {
+    if (not resetOnlyGraph) {
         commonbluerovmsg::resetekf srv;
         srv.request.xPos = 0;
         srv.request.yPos = 0;

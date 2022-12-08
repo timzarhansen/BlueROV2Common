@@ -13,6 +13,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr) {
         sonarRange = 2;
         sonarStepSize = 1;
+        this->strengthXYMovement = 0.5;
+
         QScreen *screen = QGuiApplication::primaryScreen();
         QRect screenGeometry = screen->geometry();
         int screenHeight = screenGeometry.height();
@@ -35,6 +37,7 @@ public:
         this->initializationCameraImage(screenWidth);
         this->initializationSliderCameraLight(sizeOfSlider);
         this->initializationGamepad(screenWidth);
+        this->initializationSliderXYStrength(screenWidth, sizeOfSlider);
 
 
     }
@@ -62,6 +65,8 @@ public:
 
     void handleCameraAngleSliderReleased();
 
+    void handleStrengthXYMovementSlider(int strength);
+
     //Gamepad Handling Functions
     void handleHeight(double changeOfHeight);
 
@@ -84,6 +89,34 @@ public:
 
         while (ros::ok()) {
 
+//            this->updateRightX(this->m_gamepad->axisRightX());
+//            this->updateRightY(this->m_gamepad->axisRightY());
+//            this->updateLeftX(this->m_gamepad->axisLeftX());
+//            this->updateXButton(this->m_gamepad->buttonA());
+//            this->updateSquareButton(this->m_gamepad->buttonY());
+//            this->updateCircleButton(this->m_gamepad->buttonB());
+//            this->updateTriangleButton(this->m_gamepad->buttonX());
+//            this->updateR1Button(this->m_gamepad->buttonR1());
+//            this->updateR2Button(this->m_gamepad->buttonR2());
+
+
+            //std::cout << "Sending data from Gui To ROS: " << test<< std::endl;
+
+
+            emit this->updateDesiredState(this->desiredHeight, this->desiredRoll, this->desiredPitch, this->desiredYaw,
+                                          this->desiredXMovement, this->desiredYMovement, this->holdPositionStatus);
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
+
+
+    }
+
+    void threadUpdateCurrentDesiredPoseRobot() {
+        ros::Rate loop_rate(10);
+
+        while (ros::ok()) {
+
             this->updateRightX(this->m_gamepad->axisRightX());
             this->updateRightY(this->m_gamepad->axisRightY());
             this->updateLeftX(this->m_gamepad->axisLeftX());
@@ -94,12 +127,6 @@ public:
             this->updateR1Button(this->m_gamepad->buttonR1());
             this->updateR2Button(this->m_gamepad->buttonR2());
 
-
-            //std::cout << "Sending data from Gui To ROS: " << test<< std::endl;
-
-
-            emit this->updateDesiredState(this->desiredHeight, this->desiredRoll, this->desiredPitch, this->desiredYaw,
-                                          this->desiredXMovement, this->desiredYMovement, this->holdPositionStatus);
             ros::spinOnce();
             loop_rate.sleep();
         }
@@ -115,10 +142,11 @@ public slots:
 
     void updateStateOfRobot(double xPos, double yPos, double zPos, double roll, double pitch, double yaw,
                             Eigen::MatrixXd covariance);//covariance is just 6 values
+    void updateCameraImage(QPixmap cameraImage);
 
     void updateSonarImage(QPixmap sonarImage);
 
-    void updateCameraImage(QPixmap cameraImage);
+    void updateDVLState(double distance1, double distance2, double distance3, double distance4);
 
     void updateRightX(double value);
 
@@ -160,14 +188,15 @@ signals:
     void updateLightIntensity(int intensityLight);
 
 private:
-    QLabel *distanceToBottom, *depth, *plotOfPosition, *sonarLabel, *sonarTicks;
-    QLabel *currentSonarRange, *sonarStepSizeLabel, *currentSonarStepSize, *sonarImageLabel;
+    QLabel *distanceToBottom, *depth, *plotOfPosition, *sonarLabel, *sonarTicks, *movementStrengthLabel;
+    QLabel *currentSonarRange, *sonarStepSizeLabel, *currentSonarStepSize, *sonarImageLabel, *currentStrengthXYMovement;
     QLabel *lightLabel, *cameraImageLabel, *lightTicks, *currentLightIntensity, *cameraAngleLabel;
     QLabel *currentCameraAngle, *cameraAngleTicks;
-    QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel;
-    QLabel *currentPositionZLabel, *currentPositionLabel, *currentPositionYawLabel;
+    QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel, *desiredPositionLabel;
+    QLabel *currentPositionZLabel, *currentPositionLabel, *currentPositionYawLabel, *currentPositionXLabel, *currentPositionRollLabel, *currentPositionPitchLabel, *currentPositionYLabel;
+    QLabel *currentDistanceToBottom, *currentDistanceDVL1, *currentDistanceDVL2, *currentDistanceDVL3, *currentDistanceDVL4;
     QPushButton *resetEKF, *holdPos, *resetGraphEKF;
-    QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider;
+    QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider, *strengthXYMovementSlider;
     int sonarRange, sonarStepSize, lightIntensity, cameraAngleDesired;
     QCustomPlot *customPlot;
     QVector<double> xPositionRobot, yPositionRobot, yawPositionRobot;
@@ -181,7 +210,7 @@ private:
     //current state Robot:
     std::atomic<double> currentHeight, currentRoll, currentPitch, currentYaw, currentXPos, currentYPos;
 
-
+    std::atomic<double> strengthXYMovement;
 private:
     void initializationSonarWindows(int xposRangeSonar, int yposRangeSonar, int screenWidth, int sizeOfSlider) {
         //range sonar
@@ -225,8 +254,31 @@ private:
         connect(angularStepSizeSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarStepReleased);
         this->angularStepSizeSlider->setSliderPosition(5);
         //send initial values to sonar
-        this->handleSonarSliderReleased();
+//        this->handleSonarSliderReleased();
     }
+
+    void initializationSliderXYStrength(int screenWidth, int sizeOfSlider) {
+        //strength Slider
+        this->strengthXYMovementSlider = new QSlider(Qt::Horizontal, this);
+
+        this->strengthXYMovementSlider->setFocusPolicy(Qt::StrongFocus);
+        //rangeSonarSlider->setTickPosition(QSlider::TicksBelow);
+        this->strengthXYMovementSlider->setTickInterval(1);
+        this->strengthXYMovementSlider->setMaximum(10);
+        this->strengthXYMovementSlider->setMinimum(1);
+        this->strengthXYMovementSlider->setGeometry(
+                QRect(QPoint(screenWidth / 2 - sizeOfSlider, 70), QSize(sizeOfSlider, 20)));
+        movementStrengthLabel = new QLabel("Strength Of XY Movement:", this);
+        movementStrengthLabel->setGeometry(QRect(QPoint(screenWidth / 2 - 1.3 * sizeOfSlider, 10), QSize(200, 50)));
+        currentStrengthXYMovement = new QLabel("0", this);
+        currentStrengthXYMovement->setGeometry(
+                QRect(QPoint(screenWidth / 2 - 0.5 * sizeOfSlider, 10), QSize(200, 50)));
+        connect(this->strengthXYMovementSlider, &QSlider::valueChanged, this,
+                &MainWindow::handleStrengthXYMovementSlider);
+//        connect(this->strengthXYMovementSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarSliderReleased);
+        this->strengthXYMovementSlider->setSliderPosition(5);
+    }
+
 
     void initializationCurrentPosition(int screenWidth) {
         int sizePlot = 400;
@@ -235,7 +287,9 @@ private:
         resetEKF = new QPushButton("Reset EKF", this);
         // set size and location of the button
         resetEKF->setGeometry(QRect(QPoint(distanceFromLeftCorner, 500), QSize(sizeButtons, 40)));
-        connect(resetEKF, &QPushButton::released, this, &MainWindow::handleEKFReset);
+
+        //disabling EKF reset. Could also be solved by supressing the send mavros vision position for some time. Would be done in the EKF system
+//        connect(resetEKF, &QPushButton::released, this, &MainWindow::handleEKFReset);
         this->holdPos = new QPushButton("hold Pos", this);
         // set size and location of the button
         this->holdPos->setGeometry(
@@ -331,8 +385,8 @@ private:
         this->cameraAngleSlider->setSliderPosition(90);
 
         //send initial values to robot
-        this->handleCameraAngleSliderReleased();
-        this->handleLightSliderReleased();
+//        this->handleCameraAngleSliderReleased();
+//        this->handleLightSliderReleased();
     }
 
     void initializationGamepad(int screenWidth) {
@@ -363,38 +417,76 @@ private:
 //        connect(this->m_gamepad, &QGamepad::buttonGuideChanged, this, );
         int xPositionOfLabels = 200;
         int yPositionOfLabels = 300;
+        desiredPositionLabel = new QLabel("Desired State: ", this);
+        desiredPositionLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels - 40), QSize(200, 45)));
+
         currentXThrustLabel = new QLabel("Thrust X: ", this);
-        currentXThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels), QSize(100, 50)));
+        currentXThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels - 5), QSize(100, 45)));
 
         currentYThrustLabel = new QLabel("Thrust Y: ", this);
-        currentYThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels), QSize(100, 50)));
+        currentYThrustLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels - 5), QSize(100, 45)));
 
         currentHeightDesiredLabel = new QLabel("Height: 0.00", this);
         currentHeightDesiredLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels), QSize(100, 50)));
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels - 5), QSize(100, 45)));
 
         currentDesiredRollLabel = new QLabel("Roll: 0.00", this);
         currentDesiredRollLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 50), QSize(100, 50)));
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 30), QSize(100, 45)));
 
         currentDesiredPitchLabel = new QLabel("Pitch: 0.00", this);
-        currentDesiredPitchLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 50), QSize(100, 50)));
+        currentDesiredPitchLabel->setGeometry(QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 30), QSize(100, 45)));
 
         currentDesiredYawLabel = new QLabel("Yaw: 0.00", this);
         currentDesiredYawLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 50), QSize(100, 50)));
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 30), QSize(100, 45)));
 
-        currentPositionLabel = new QLabel("Current Position : ", this);
+        currentPositionLabel = new QLabel("Position : ", this);
         currentPositionLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 100), QSize(200, 50)));
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 85), QSize(150, 45)));
+
+        currentPositionXLabel = new QLabel("X: ", this);
+        currentPositionXLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 115), QSize(150, 45)));
+
+        currentPositionYLabel = new QLabel("Y: ", this);
+        currentPositionYLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 115), QSize(150, 45)));
 
         currentPositionZLabel = new QLabel("Height: ", this);
         currentPositionZLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 150), QSize(150, 50)));
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 115), QSize(150, 45)));
+
+        currentPositionRollLabel = new QLabel("Roll: ", this);
+        currentPositionRollLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 150), QSize(150, 45)));
+
+        currentPositionPitchLabel = new QLabel("Pitch: ", this);
+        currentPositionPitchLabel->setGeometry(
+                QRect(QPoint(xPositionOfLabels, yPositionOfLabels + 150), QSize(150, 45)));
 
         currentPositionYawLabel = new QLabel("Yaw: ", this);
         currentPositionYawLabel->setGeometry(
-                QRect(QPoint(xPositionOfLabels - 150, yPositionOfLabels + 150), QSize(150, 50)));
+                QRect(QPoint(xPositionOfLabels + 150, yPositionOfLabels + 150), QSize(150, 45)));
+
+        currentDistanceToBottom = new QLabel("DVL distances: ", this);
+        currentDistanceToBottom->setGeometry(
+                QRect(QPoint(screenWidth / 2 - screenWidth / 5 -screenWidth/25, yPositionOfLabels - 40), QSize(200, 45)));
+
+        currentDistanceDVL1 = new QLabel("Distance 1: ", this);
+        currentDistanceDVL1->setGeometry(
+                QRect(QPoint(screenWidth / 2 - screenWidth / 5 -screenWidth/25, yPositionOfLabels ), QSize(200, 45)));
+        currentDistanceDVL2 = new QLabel("Distance 2: ", this);
+        currentDistanceDVL2->setGeometry(
+                QRect(QPoint(screenWidth / 2 - screenWidth / 5 -screenWidth/25 + screenWidth/12, yPositionOfLabels ), QSize(200, 45)));
+        currentDistanceDVL3 = new QLabel("Distance 3: ", this);
+        currentDistanceDVL3->setGeometry(
+                QRect(QPoint(screenWidth / 2 - screenWidth / 5 -screenWidth/25, yPositionOfLabels +40), QSize(200, 45)));
+        currentDistanceDVL4 = new QLabel("Distance 4: ", this);
+        currentDistanceDVL4->setGeometry(
+                QRect(QPoint(screenWidth / 2  - screenWidth / 5 -screenWidth/25 + screenWidth/12, yPositionOfLabels +40), QSize(200, 45)));
+
 
     }
 
@@ -423,6 +515,21 @@ private:
         }
 
         return output;
+    }
+
+public:
+    void updateDesiredPosition(){
+
+        ros::Duration(0.2).sleep();
+        double tmpNumber;
+        tmpNumber = this->currentYaw;
+        this->desiredYaw = tmpNumber;
+
+        tmpNumber = this->currentHeight;
+        this->desiredHeight = tmpNumber;
+        QString xstr = "Height: " + QString::number(this->desiredHeight, 'f', 2);
+        this->currentHeightDesiredLabel->setText(xstr);
+
     }
 
 };

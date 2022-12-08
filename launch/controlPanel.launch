@@ -1,4 +1,0 @@
-<launch>
-    <node pkg="bluerov2common" type="tkinterExample.py" name="controlPanelStart" output="screen" >
-    </node>
-</launch>

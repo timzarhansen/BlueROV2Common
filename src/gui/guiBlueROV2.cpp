@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle n_;
     rosHandlerGui rosHandler(n_);
 //    std::thread t1(init);
-    ros::AsyncSpinner spinner(4); // Use 4 threads
+    ros::AsyncSpinner spinner(2); // Use 2 threads
     spinner.start();
 //    Q_INIT_RESOURCE(application);
     QApplication app(argc, argv);
@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
 
 
     std::thread t2(&MainWindow::threadSendCurrentDesiredPoseRobot, &mainWindow);
-
+    std::thread t3(&MainWindow::threadUpdateCurrentDesiredPoseRobot, &mainWindow);
+    std::thread t4(&MainWindow::updateDesiredPosition, &mainWindow);
     mainWindow.setStyleSheet("background-color: rgb(177,205,186); ");
     //ROS to GUI
     QObject::connect(&rosHandler, &rosHandlerGui::updatePlotPositionVectorROS,
@@ -38,6 +39,11 @@ int main(int argc, char *argv[])
                      &mainWindow, &MainWindow::updateSonarImage,Qt::BlockingQueuedConnection);
     QObject::connect(&rosHandler, &rosHandlerGui::updateCameraImageROS,
                      &mainWindow, &MainWindow::updateCameraImage,Qt::BlockingQueuedConnection);
+    QObject::connect(&rosHandler, &rosHandlerGui::updateDVLStateROS,
+                     &mainWindow, &MainWindow::updateDVLState,Qt::AutoConnection);
+
+
+
     //GUI to ROS
     QObject::connect(&mainWindow, &MainWindow::updateDesiredState, &rosHandler, &rosHandlerGui::updateDesiredState,Qt::AutoConnection);
     QObject::connect(&mainWindow, &MainWindow::resetEKFEstimator, &rosHandler, &rosHandlerGui::resetEKFEstimator,Qt::AutoConnection);
@@ -48,5 +54,7 @@ int main(int argc, char *argv[])
 
 
     mainWindow.showMaximized();
+
+//    mainWindow.updateDesiredPosition();
     return app.exec();
 }

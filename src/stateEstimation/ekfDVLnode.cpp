@@ -39,25 +39,27 @@ public:
             std::cout << "External DVL used for EKF" << std::endl;
             this->subscriberDVL = n_.subscribe("dvl/transducer_report", 1000, &rosClassEKF::DVLCallbackDVL, this);
         } else {
-            if(dvlUsage == "gazebo"){
+            if (dvlUsage == "gazebo") {
                 std::cout << "Gazebo DVL used for EKF" << std::endl;
-                this->subscriberVelocitySimulation = n_.subscribe("simulatedDVL", 1000, &rosClassEKF::DVLCallbackSimulation,
+                this->subscriberVelocitySimulation = n_.subscribe("simulatedDVL", 1000,
+                                                                  &rosClassEKF::DVLCallbackSimulation,
                                                                   this);
-            }else{
+            } else {
 
-                if(dvlUsage == "mavros") {
+                if (dvlUsage == "mavros") {
 
                     std::cout << "Gazebo DVL used for EKF" << std::endl;
-                    this->subscriberVelocityMavros = n_.subscribe("mavros/local_position/velocity_body_frd", 1000, &rosClassEKF::DVLCallbackMavros,
-                                                                      this);
+                    this->subscriberVelocityMavros = n_.subscribe("mavros/local_position/velocity_body_frd", 1000,
+                                                                  &rosClassEKF::DVLCallbackMavros,
+                                                                  this);
 
 
-                }else{
+                } else {
                     std::cout << "no matching DVL usage found" << std::endl;
                     exit(-1);
                 }
 
-                }
+            }
 
 
         }
@@ -77,7 +79,7 @@ private:
 //    std::deque<mavros_msgs::Altitude::ConstPtr> depthDeque;
 //    std::deque<geometry_msgs::TwistStamped::ConstPtr> dvlDeque;
     ekfClassDVL currentEkf;
-    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults, subscriberVelocitySimulation,subscriberVelocityMavros;
+    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults, subscriberVelocitySimulation, subscriberVelocityMavros;
     ros::Publisher publisherPoseEkf, publisherTwistEkf;
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
@@ -137,7 +139,7 @@ private:
     }
 
     void DVLCallbackDVLHelper(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
-        if (!msg->report.velocity_valid) {
+        if (!msg->report.velocity_valid || msg->report.status != 0) {
             //if we dont know anything, the ekf should just go to 0, else the IMU gives direction.
             this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, msg->header.stamp);
         } else {
@@ -164,7 +166,8 @@ private:
     }
 
     void DVLCallbackMavrosHelper(const geometry_msgs::TwistStamped::ConstPtr &msg) {
-        this->currentEkf.updateDVL(msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z, Eigen::Quaterniond(1, 0, 0, 0),
+        this->currentEkf.updateDVL(msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z,
+                                   Eigen::Quaterniond(1, 0, 0, 0),
                                    msg->header.stamp);
     }
 
@@ -173,7 +176,6 @@ private:
         this->DVLCallbackMavrosHelper(msg);
         this->updateSlamMutex.unlock();
     }
-
 
 
     bool resetEKF(commonbluerovmsg::resetekf::Request &req, commonbluerovmsg::resetekf::Response &res) {
@@ -238,6 +240,14 @@ Eigen::Quaterniond getQuaternionForMavrosFromRPY(double roll, double pitch, doub
     return generalHelpfulTools::getQuaternionFromRPY(roll, -pitch, -yaw + M_PI / 2);
 }
 
+Eigen::Vector3f getPositionForMavrosFromXYZ(Eigen::Vector3f inputPosition) {
+    Eigen::AngleAxisf rotation_vector180X(180.0 / 180.0 * 3.14159, Eigen::Vector3f(1, 0, 0));
+    Eigen::AngleAxisf rotation_vector90Z(90.0 / 180.0 * 3.14159, Eigen::Vector3f(0, 0, 1));
+    Eigen::Vector3f positionRotatedForMavros =
+            rotation_vector90Z.toRotationMatrix() * rotation_vector180X.toRotationMatrix() * inputPosition;
+    return positionRotatedForMavros;
+
+}
 
 void spinningRos() {
     ros::spin();
@@ -292,7 +302,7 @@ int main(int argc, char **argv) {
     }
 
 
-    rosClassEKF rosClassEKFObject(n_, 3.14159 / 4.0, whichIMUUsed, whichDVLUsed);
+    rosClassEKF rosClassEKFObject(n_, M_PI / 4.0 + M_PI / 2.0, whichIMUUsed, whichDVLUsed);
     //ros::spin();
     std::thread t1(spinningRos);
 
@@ -303,7 +313,7 @@ int main(int argc, char **argv) {
     server.setCallback(f);
 
 
-    ros::Publisher publisherPoseEkf = n_.advertise<geometry_msgs::PoseStamped>("mavros/vision_pose/pose", 10);
+    ros::Publisher publisherPoseEkfMavros = n_.advertise<geometry_msgs::PoseStamped>("mavros/vision_pose/pose", 10);
     ros::Publisher publisherEasyReadEkf = n_.advertise<commonbluerovmsg::stateOfBlueRov>("ekfStateRPY", 10);
     ros::Rate ourRate = ros::Rate(30);
     //sending position to Mavros mavros/vision_pose/pose
@@ -315,11 +325,10 @@ int main(int argc, char **argv) {
         msg_vicon_pose.header.stamp = currentPoseEkf.timeLastPrediction;
         msg_vicon_pose.header.frame_id = "map_ned"; //optional. Works fine without frame_id
 
-        Eigen::AngleAxisf rotation_vector180X(180.0 / 180.0 * 3.14159, Eigen::Vector3f(1, 0, 0));
-        Eigen::AngleAxisf rotation_vector90Z(90.0 / 180.0 * 3.14159, Eigen::Vector3f(0, 0, 1));
-        Eigen::Vector3f positionRotatedForMavros =
-                rotation_vector90Z.toRotationMatrix() * rotation_vector180X.toRotationMatrix() *
-                currentPoseEkf.position;
+//        Eigen::AngleAxisf rotation_vector180X(180.0 / 180.0 * 3.14159, Eigen::Vector3f(1, 0, 0));
+//        Eigen::AngleAxisf rotation_vector90Z(90.0 / 180.0 * 3.14159, Eigen::Vector3f(0, 0, 1));
+        Eigen::Vector3f positionRotatedForMavros = getPositionForMavrosFromXYZ(
+                currentPoseEkf.position);
 
         msg_vicon_pose.pose.position.x = positionRotatedForMavros.x();
         msg_vicon_pose.pose.position.y = positionRotatedForMavros.y();
@@ -333,7 +342,7 @@ int main(int argc, char **argv) {
         msg_vicon_pose.pose.orientation.y = currentRotation.y();
         msg_vicon_pose.pose.orientation.z = currentRotation.z();
         msg_vicon_pose.pose.orientation.w = currentRotation.w();
-        publisherPoseEkf.publish(msg_vicon_pose);
+        publisherPoseEkfMavros.publish(msg_vicon_pose);
         //calculate pose and publish for easy reading
         commonbluerovmsg::stateOfBlueRov msgForRPYState;
         msgForRPYState.header.stamp = currentPoseEkf.timeLastPrediction;

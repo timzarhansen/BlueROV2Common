@@ -17,6 +17,9 @@
 #include "cv_bridge/cv_bridge.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/core.hpp>
+
 #include <QtGamepad/QGamepad>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -28,7 +31,7 @@
 #include <ping360_sonar/sendingSonarConfig.h>
 #include <commonbluerovmsg/lightDensity0to10.h>
 #include <commonbluerovmsg/cameraAngle.h>
-
+#include "waterlinked_dvl/TransducerReportStamped.h"
 
 #ifndef BLUEROV2COMMON_ROSHANDLERGUI_H
 #define BLUEROV2COMMON_ROSHANDLERGUI_H
@@ -42,6 +45,8 @@ public:
         subscriberSonarImage = n_.subscribe("sonar/image",10,&rosHandlerGui::sonarImageCallback,this);
 //        subscriberCameraImage = n_.subscribe("cv_camera/image_raw",1000,&rosHandlerGui::cameraImageCallback,this);
         subscriberCameraImage = n_.subscribe("camera/image_raw/compressed",10,&rosHandlerGui::cameraImageCallback,this);
+        subscriberDVL = n_.subscribe("dvl/transducer_report",10,&rosHandlerGui::DVLCallback,this);
+
         publishingDesiredState = n_.advertise<commonbluerovmsg::desiredStateForRobot>("desiredStateOfBluerov2", 10);
         clientEKF = n_.serviceClient<commonbluerovmsg::resetekf>("resetCurrentEKF");
         clientSonar = n_.serviceClient<ping360_sonar::sendingSonarConfig>("changeParametersSonar");
@@ -63,12 +68,13 @@ public:
         void updateSonarImageROS(QPixmap sonarImage);
         void updateCameraImageROS(QPixmap cameraImage);
         void updateStateOfRobotROS(double xPos, double yPos, double zPos, double roll, double pitch, double yaw, Eigen::MatrixXd covariance);//covariance is just 6 values
+        void updateDVLStateROS(double distance1, double distance2, double distance3, double distance4);
 
 private:
     double angleOfCamera ,intensityOfLight,currentDepth,distanceToBottom;
 //        std::vector<double> xPositionRobot,yPositionRobot,yawPositionRobot;
     std::vector<double> xPositionRobot, yPositionRobot,yawPositionRobot;
-    ros::Subscriber subscriberPosRobot,subscriberSonarImage,subscriberCameraImage;
+    ros::Subscriber subscriberPosRobot,subscriberSonarImage,subscriberCameraImage, subscriberDVL;
     //std::atomic<double> desiredHeight, desiredRoll,desiredPitch, desiredYaw, desiredXMovement, desiredYMovement;
     ros::Publisher publishingDesiredState;
     ros::ServiceClient clientEKF,clientSonar,clientLight,clientCameraAngle;
@@ -77,6 +83,7 @@ private:
     void positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
     void sonarImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void cameraImageCallback(const sensor_msgs::CompressedImagePtr & msg);
+    void DVLCallback(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg);
 
 public:
     Eigen::Vector3d getRollPitchYaw(Eigen::Quaterniond quat) {

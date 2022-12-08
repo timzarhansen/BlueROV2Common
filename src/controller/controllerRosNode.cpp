@@ -4,7 +4,7 @@
 #include "controllerOfBluerov2.h"
 
 #include <visualization_msgs/Marker.h>
-
+#include "mavros_msgs/CommandBool.h"
 //class rosNode {
 //public:
 //    rosNode(ros::NodeHandle n_){
@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
     ros::NodeHandle n_;
     controllerOfBluerov2 objectOfController(n_);
 
+//    ros::ServiceClient clientArming;
+//    clientArming = n_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
     dynamic_reconfigure::Server<bluerov2common::controllerConfig> server;
     dynamic_reconfigure::Server<bluerov2common::controllerConfig>::CallbackType f;
 
@@ -93,6 +95,10 @@ int main(int argc, char **argv) {
         rate.sleep();
         ros::spinOnce();
     }
+
+//    mavros_msgs::CommandBool tmpMSG;
+//    tmpMSG.request.value = false;
+//    clientArming.call(tmpMSG);
 
     return (0);
 }

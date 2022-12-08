@@ -50,5 +50,5 @@
         <node pkg="bluerov2common" type="controllerbluerov2" name="controllerbluerov2" output="screen" required="true">
     </node>
 
-    <!-- rosbag record camera/camera_info camera/image_raw/compressed controllerThrustVisualization desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity -->
+    <!-- rosbag record camera/camera_info camera/image_raw/compressed desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity  mavros/gpsstatus/gps1/rtk mavros/gpsstatus/gps1/raw -->
 </launch>
