@@ -40,9 +40,9 @@ public:
         this->measurementNoiseDepth(2, 2) = 0.5;//z
 
         this->measurementNoiseDVL = Eigen::MatrixXd::Identity(12, 12);
-        this->measurementNoiseDVL(3, 3) = 0.1;//vx
-        this->measurementNoiseDVL(4, 4) = 0.1;//vy
-        this->measurementNoiseDVL(5, 5) = 0.1;//vz
+        this->measurementNoiseDVL(3, 3) = 0.2;//vx
+        this->measurementNoiseDVL(4, 4) = 0.2;//vy
+        this->measurementNoiseDVL(5, 5) = 0.2;//vz
 
 
         this->measurementImuVelocity = Eigen::MatrixXd::Identity(12, 12);

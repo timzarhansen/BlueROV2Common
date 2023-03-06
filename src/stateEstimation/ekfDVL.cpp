@@ -10,18 +10,12 @@ void ekfClassDVL::predictionImu(double xAccel, double yAccel, double zAccel, Eig
 
     // A-Matrix is zeros, except for the entries of transition between velocity and position.(there time diff since last prediction
     // update state
-//    std::cout << "xPos: " << currentStateBeforeUpdate[0] << std::endl;
-//    std::cout << "X-Vel: " <<  currentStateBeforeUpdate[0] << std::endl;
-//    std::cout << "########## State: " << std::endl;
-//    std::cout << currentStateBeforeUpdate << std::endl;
     Eigen::Vector3d bodyAcceleration(xAccel, yAccel, zAccel);
     // bodyAcceleration has to be changed to correct rotation(body acceleration)
     Eigen::Vector3d localAcceleration = this->getRotationVector() *
                                         bodyAcceleration;// @TODO should be checked if still correct something has to change
     localAcceleration(2) = localAcceleration(2) + 9.81;
 
-//   std::cout << "local acceleration in world system: "<< " x: " << localAcceleration(0) << " y: " << localAcceleration(1) <<std::endl;
-//   std::cout << this->stateOfEKF.rotation.x()<<" "<<this->stateOfEKF.rotation.y()<<" "<<this->stateOfEKF.rotation.z() << std::endl;
     double timeDiff = (timeStamp - this->stateOfEKF.timeLastPrediction).toSec();
 
     if (timeDiff > 0.4 || timeDiff < 0) {
@@ -139,6 +133,7 @@ ekfClassDVL::updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond
 
 
     Eigen::Vector3d velocityBodyLinear(xVel, yVel, zVel);
+
     velocityBodyLinear = rotationOfDVL * velocityBodyLinear;
     // velocityAngular has to be changed to correct rotation(world velocityAngular)
     Eigen::Vector3d velocityLocalLinear = this->getRotationVector() * velocityBodyLinear;
@@ -297,6 +292,7 @@ void ekfClassDVL::setMeasurementNoiseDVL(double vxNoise, double vyNoise, double 
     this->measurementNoiseDVL(3, 3) = vxNoise;//vx
     this->measurementNoiseDVL(4, 4) = vyNoise;//vy
     this->measurementNoiseDVL(5, 5) = vzNoise;//vz
+//    std::cout << vxNoise <<" " <<vyNoise<<" " << vzNoise << std::endl;
 }
 
 void ekfClassDVL::setMeasurementNoiseDepth(double zNoise){

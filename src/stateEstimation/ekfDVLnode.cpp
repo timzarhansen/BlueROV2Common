@@ -15,15 +15,15 @@
 #include "commonbluerovmsg/heightStamped.h"
 //#include <chrono>
 #include <thread>
-#include "bluerov2common/ekfnoiseConfig.h"
+#include "bluerov2common/ekfParameterConfig.h"
 #include <dynamic_reconfigure/server.h>
 #include <commonbluerovmsg/stateOfBlueRov.h>
 
 class rosClassEKF {
 public:
-    rosClassEKF(ros::NodeHandle n_, double rotationOfDVLZ, std::string imuUsage, std::string dvlUsage) : currentEkf(
+    rosClassEKF(ros::NodeHandle n_, std::string imuUsage, std::string dvlUsage) : currentEkf(
             ros::Time::now()) {
-        this->rotationOfDVL = Eigen::AngleAxisd(rotationOfDVLZ,
+        this->rotationOfDVL = Eigen::AngleAxisd(0,
                                                 Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
         //std::cout << "we are here" << std::endl;
         //std::cout << imuUsage << std::endl;
@@ -206,12 +206,13 @@ private:
     void headingHelper(const geometry_msgs::Vector3Stamped::ConstPtr &msg) {
         this->currentEkf.updateHeading(msg->vector.z, msg->header.stamp);
     };
+
 public:
     pose getPoseOfEKF() {
         return this->currentEkf.getState();
     }
 
-    void callbackReconfiguration(underwaterslam::ekfnoiseConfig &config, uint32_t level) {
+    void callbackReconfiguration(underwaterslam::ekfParameterConfig &config, uint32_t level) {
         this->updateSlamMutex.lock();
 
         this->currentEkf.setProcessNoise(config.processNoiseX, config.processNoiseY, config.processNoiseZ,
@@ -230,6 +231,8 @@ public:
                                                    config.measurementImuVelocityVelRoll,
                                                    config.measurementImuVelocityVelPitch,
                                                    config.measurementImuVelocityVelYaw);
+        this->rotationOfDVL = Eigen::AngleAxisd(config.yawRotationDVL,
+                                                Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
 
         this->updateSlamMutex.unlock();
     }
@@ -302,12 +305,15 @@ int main(int argc, char **argv) {
     }
 
 
-    rosClassEKF rosClassEKFObject(n_, M_PI / 4.0 + M_PI / 2.0, whichIMUUsed, whichDVLUsed);
+//    rosClassEKF rosClassEKFObject(n_,  M_PI / 4.0 + M_PI / 2.0, whichIMUUsed, whichDVLUsed); // KELLER VALENTIN OLD
+//    rosClassEKF rosClassEKFObject(n_, -M_PI / 4.0 , whichIMUUsed, whichDVLUsed);//TUHH TANK
+    rosClassEKF rosClassEKFObject(n_, whichIMUUsed, whichDVLUsed);
+
     //ros::spin();
     std::thread t1(spinningRos);
 
-    dynamic_reconfigure::Server<underwaterslam::ekfnoiseConfig> server;
-    dynamic_reconfigure::Server<underwaterslam::ekfnoiseConfig>::CallbackType f;
+    dynamic_reconfigure::Server<underwaterslam::ekfParameterConfig> server;
+    dynamic_reconfigure::Server<underwaterslam::ekfParameterConfig>::CallbackType f;
 
     f = boost::bind(&rosClassEKF::callbackReconfiguration, &rosClassEKFObject, _1, _2);
     server.setCallback(f);
