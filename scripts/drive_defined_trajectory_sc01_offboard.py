@@ -48,6 +48,8 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
     x_des = x_des[current_pos_number]
     y_des = y_des[current_pos_number]
     z_des = z_des[current_pos_number]
+
+    yaw_des = 00.0/180.0*np.pi # set constant angle
     # yaw_des = 0.5
 
     errorInZ = z_des - pose_ned.pose.position.z
@@ -99,8 +101,8 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
 def main():
     rospy.init_node('drive_scenario_01')
     rospack = rospkg.RosPack()
-    # data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list.csv'
-    data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list_with_angles.csv'
+    data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list.csv'
+    # data_path = rospack.get_path("bluerov2common") + '/config/where_to_move_list_with_angles.csv'
     try:
         with open(data_path, 'r') as f:
             reader = csv.reader(f, delimiter=',')
@@ -129,7 +131,8 @@ def main():
             y_des = data[:, 1]
             z_des = data[:, 2]
             yaw_des = data[:, 3]
-            yaw_des = yaw_des / 180 * np.pi  # from deg to rad
+            yaw_des = yaw_des / 180.0 * np.pi  # from deg to rad
+            # yaw_des = 60.0 / 180.0 * np.pi  # from deg to rad
 
             N = data.shape[0]
             print(yaw_des)

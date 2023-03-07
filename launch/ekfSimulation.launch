@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- external or mavros -->
+    <node pkg="bluerov2common" type="EKFDVL" name="EKFDVL" output="screen" required="true">
+            <param name="/imu_used"  type="str" value="mavros" />
+            <param name="/dvl_used"  type="str" value="gazebo" />
+    </node>
+
+
+    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /EKFDVL $(find bluerov2common)/config/ekfSimulation.yaml" />
+</launch>

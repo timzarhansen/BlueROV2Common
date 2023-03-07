@@ -25,6 +25,8 @@ public:
             ros::Time::now()) {
         this->rotationOfDVL = Eigen::AngleAxisd(0,
                                                 Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
+        this->positionIMU = Eigen::Vector3d(0,0,0);
+        this->positionDVL = Eigen::Vector3d(0,0,0);
         //std::cout << "we are here" << std::endl;
         //std::cout << imuUsage << std::endl;
         if (imuUsage == "external") {
@@ -83,6 +85,7 @@ private:
     ros::Publisher publisherPoseEkf, publisherTwistEkf;
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
+    Eigen::Vector3d positionIMU,positionDVL;
     ros::ServiceServer serviceResetEkf;
 
     void imuCallbackHelper(const sensor_msgs::Imu::ConstPtr &msg) {
@@ -95,7 +98,7 @@ private:
 //        std::cout << msg->linear_acceleration.x<< " " << msg->linear_acceleration.y<< " " << msg->linear_acceleration.z << std::endl;
 
         currentEkf.predictionImu(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z,
-                                 tmpRot,
+                                 tmpRot,this->positionIMU,
                                  msg->header.stamp);
 
         Eigen::Vector3d euler = generalHelpfulTools::getRollPitchYaw(tmpRot);// roll pitch yaw
@@ -141,9 +144,9 @@ private:
     void DVLCallbackDVLHelper(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
         if (!msg->report.velocity_valid || msg->report.status != 0) {
             //if we dont know anything, the ekf should just go to 0, else the IMU gives direction.
-            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, msg->header.stamp);
+            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL,this->positionDVL, msg->header.stamp);
         } else {
-            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,
+            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,this->positionDVL,
                                        msg->header.stamp);
         }
     }
@@ -155,7 +158,7 @@ private:
     }
 
     void DVLCallbackSimulationHelper(const geometry_msgs::Vector3Stamped::ConstPtr &msg) {
-        this->currentEkf.updateDVL(msg->vector.x, msg->vector.y, msg->vector.z, Eigen::Quaterniond(1, 0, 0, 0),
+        this->currentEkf.updateDVL(msg->vector.x, msg->vector.y, msg->vector.z, Eigen::Quaterniond(1, 0, 0, 0),this->positionDVL,
                                    msg->header.stamp);
     }
 
@@ -167,7 +170,7 @@ private:
 
     void DVLCallbackMavrosHelper(const geometry_msgs::TwistStamped::ConstPtr &msg) {
         this->currentEkf.updateDVL(msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z,
-                                   Eigen::Quaterniond(1, 0, 0, 0),
+                                   Eigen::Quaterniond(1, 0, 0, 0),this->positionDVL,
                                    msg->header.stamp);
     }
 
@@ -233,6 +236,13 @@ public:
                                                    config.measurementImuVelocityVelYaw);
         this->rotationOfDVL = Eigen::AngleAxisd(config.yawRotationDVL,
                                                 Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
+        this->positionDVL.x()=config.xPositionDVL;
+        this->positionDVL.y()=config.yPositionDVL;
+        this->positionDVL.z()=config.zPositionDVL;
+
+        this->positionIMU.x()=config.xPositionIMU;
+        this->positionIMU.y()=config.yPositionIMU;
+        this->positionIMU.z()=config.zPositionIMU;
 
         this->updateSlamMutex.unlock();
     }

@@ -1,0 +1,12 @@
+<launch>
+
+    <node name="giverights" pkg="bluerov2common" type="giveRights.sh" />
+    <!-- IMU-->
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
+        <rosparam command="load" file="$(find bluerov2common)/config/xsens_mti_node.yaml" />
+    </node>
+
+            <node pkg="bluerov2common" type="conversionenutofrd" name="conversionenutofrd" output="screen" required="true">
+        </node>
+
+</launch>
