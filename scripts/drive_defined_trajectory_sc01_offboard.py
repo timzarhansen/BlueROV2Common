@@ -5,6 +5,7 @@ from pyquaternion import Quaternion
 import rospy
 import sensor_msgs.msg
 import geometry_msgs.msg
+import commonbluerovmsg.msg
 import tf2_ros
 import tf2_geometry_msgs
 import rospkg
@@ -16,10 +17,10 @@ publisher_waypoint = rospy.Publisher('mavros/setpoint_raw/attitude', mavros_msgs
 subscriber_position = rospy.Subscriber
 rate = None
 current_pos_number = 0
-
+heightReal = 0
 
 def callback(msg: geometry_msgs.msg.PoseStamped, args):
-    global current_pos_number
+    global current_pos_number, heightReal
     buffer_tf2, x_des, y_des, z_des, yaw_des, N = args
 
     transformation_enu_to_ned = buffer_tf2.lookup_transform(source_frame=msg.header.frame_id, target_frame="map_ned",
@@ -30,7 +31,7 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
     if np.sqrt(
             (pose_ned.pose.position.x - x_des[current_pos_number]) ** 2 + (
                     pose_ned.pose.position.y - y_des[current_pos_number]) ** 2 + (
-                    pose_ned.pose.position.z - z_des[current_pos_number]) ** 2) < 0.5:  # define R
+                    heightReal - z_des[current_pos_number]) ** 2) < 0.5:  # define R
         current_pos_number = current_pos_number + 1
         if current_pos_number > N - 1:
             current_pos_number = 0
@@ -49,10 +50,10 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
     y_des = y_des[current_pos_number]
     z_des = z_des[current_pos_number]
 
-    yaw_des = 00.0/180.0*np.pi # set constant angle
+    # yaw_des = 00.0/180.0*np.pi # set constant angle
     # yaw_des = 0.5
 
-    errorInZ = z_des - pose_ned.pose.position.z
+    errorInZ = z_des - heightReal # pose_ned.pose.position.z
 
     # if(np.abs(this->integratorHeight+0.1*errorInZ)<0.2){
     # this->integratorHeight = this->integratorHeight+0.1*errorInZ;
@@ -65,7 +66,9 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
     thrust1 = x_des - pose_ned.pose.position.x
     thrust2 = y_des - pose_ned.pose.position.y
     thrust12 = np.asarray([[thrust1], [thrust2]])
-
+    # print(thrust12)
+    # print(thrustHeight)
+    # print("huhu")
     # print(currentYaw)
     # print(thrust12)
     rotationYaw = np.identity(2)
@@ -96,6 +99,10 @@ def callback(msg: geometry_msgs.msg.PoseStamped, args):
     send_waypoint.body_rate.z = -thrustHeight
 
     publisher_waypoint.publish(send_waypoint)
+
+def callbackHGT(msg: commonbluerovmsg.msg.heightStamped):
+    global heightReal
+    heightReal = msg.height
 
 
 def main():
@@ -145,6 +152,8 @@ def main():
     transform_listener = tf2_ros.TransformListener(buffer_tf2)
     rospy.Subscriber('/mavros/local_position/pose', geometry_msgs.msg.PoseStamped, callback,
                      (buffer_tf2, x_des, y_des, z_des, yaw_des, N))
+
+    rospy.Subscriber('/height_baro', commonbluerovmsg.msg.heightStamped, callbackHGT)
 
     rospy.spin()
 

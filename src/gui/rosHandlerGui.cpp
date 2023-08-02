@@ -4,10 +4,13 @@
 
 #include "rosHandlerGui.h"
 
-void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar) {
+void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar,int frequencyRange,int numberOfSamples) {
     ping360_sonar::sendingSonarConfig srv;
     srv.request.range = rangeSonar;
     srv.request.stepSize = stepSize;
+    srv.request.frequencyRange = frequencyRange;
+    srv.request.numberOfSamples = numberOfSamples;
+
     clientSonar.call(srv);
 //    std::cout << "changed sonar Config" << std::endl;
 }

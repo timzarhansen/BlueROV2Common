@@ -11,8 +11,10 @@ class MainWindow : public QMainWindow {
 Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr) {
-        sonarRange = 2;
-        sonarStepSize = 1;
+        this->sonarRange = 2;
+        this->sonarStepSize = 1;
+        this->frequencyRangeValue = 750;
+        this->numberOfSamplesValue = 1200;
         this->strengthXYMovement = 0.5;
 
         QScreen *screen = QGuiApplication::primaryScreen();
@@ -50,6 +52,15 @@ public:
     void handleSonarStepSlider(int sonarRange);
 
     void handleSonarStepReleased();
+
+    void handleFrequencyRangeSlider(int sonarRange);
+
+    void handleFrequencyRangeReleased();
+
+    void handleNumberOfSamplesSlider(int sonarRange);
+
+    void handleNumberOfSamplesReleased();
+
 
     void handleEKFReset();
 
@@ -181,7 +192,7 @@ signals:
 
     void resetEKFEstimator(bool resetOnlyGraph);
 
-    void updateConfigSonar(int stepSize, int rangeSonar);
+    void updateConfigSonar(int stepSize, int rangeSonar,int frequencyRange,int numberOfSamples);
 
     void updateAngleCamera(int angleCamera);
 
@@ -195,9 +206,11 @@ private:
     QLabel *currentXThrustLabel, *currentYThrustLabel, *currentHeightDesiredLabel, *currentDesiredRollLabel, *currentDesiredPitchLabel, *currentDesiredYawLabel, *desiredPositionLabel;
     QLabel *currentPositionZLabel, *currentPositionLabel, *currentPositionYawLabel, *currentPositionXLabel, *currentPositionRollLabel, *currentPositionPitchLabel, *currentPositionYLabel;
     QLabel *currentDistanceToBottom, *currentDistanceDVL1, *currentDistanceDVL2, *currentDistanceDVL3, *currentDistanceDVL4;
+    QLabel *numberOfSamplesLabel,*numberOfSamplesTicks,*currentNumberOfSamples;
+    QLabel *frequencyRangeLabel,*frequencyRangeTicks,*currentfrequencyRange;
     QPushButton *resetEKF, *holdPos, *resetGraphEKF;
-    QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider, *strengthXYMovementSlider;
-    int sonarRange, sonarStepSize, lightIntensity, cameraAngleDesired;
+    QSlider *rangeSonarSlider, *angularStepSizeSlider, *lightSlider, *cameraAngleSlider, *strengthXYMovementSlider,*numberOfSamplesSlider,*frequencyRangeSlider;
+    int sonarRange, sonarStepSize, lightIntensity, cameraAngleDesired,frequencyRangeValue,numberOfSamplesValue;
     QCustomPlot *customPlot;
     QVector<double> xPositionRobot, yPositionRobot, yawPositionRobot;
     QPixmap *sonarImage, *cameraImage;
@@ -235,7 +248,7 @@ private:
         this->rangeSonarSlider->setSliderPosition(30);
 
         //angular Step size
-        yposRangeSonar = yposRangeSonar + 150;
+        yposRangeSonar = yposRangeSonar + 100;
         angularStepSizeSlider = new QSlider(Qt::Horizontal, this);
         angularStepSizeSlider->setFocusPolicy(Qt::StrongFocus);
         angularStepSizeSlider->setMaximum(10);
@@ -253,6 +266,50 @@ private:
         connect(angularStepSizeSlider, &QSlider::valueChanged, this, &MainWindow::handleSonarStepSlider);
         connect(angularStepSizeSlider, &QSlider::sliderReleased, this, &MainWindow::handleSonarStepReleased);
         this->angularStepSizeSlider->setSliderPosition(5);
+
+
+
+        // set number of samples for each sonar ray
+        yposRangeSonar = yposRangeSonar + 100;
+        numberOfSamplesSlider = new QSlider(Qt::Horizontal, this);
+        numberOfSamplesSlider->setFocusPolicy(Qt::StrongFocus);
+        numberOfSamplesSlider->setMaximum(2000);
+        numberOfSamplesSlider->setMinimum(200);
+        numberOfSamplesSlider->setGeometry(QRect(QPoint(xposRangeSonar, yposRangeSonar), QSize(sizeOfSlider, 20)));
+        numberOfSamplesLabel = new QLabel("Number Of Samples:", this);
+        numberOfSamplesLabel->setGeometry(
+                QRect(QPoint(screenWidth - 1.3 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
+        numberOfSamplesTicks = new QLabel("200                         1000                                  2000",
+                                this);
+        numberOfSamplesTicks->setGeometry(QRect(QPoint(xposRangeSonar - 3, yposRangeSonar + 25), QSize(sizeOfSlider, 15)));
+        currentNumberOfSamples = new QLabel("1000", this);
+        currentNumberOfSamples->setGeometry(
+                QRect(QPoint(screenWidth - 0.8 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
+        connect(numberOfSamplesSlider, &QSlider::valueChanged, this, &MainWindow::handleNumberOfSamplesSlider);
+        connect(numberOfSamplesSlider, &QSlider::sliderReleased, this, &MainWindow::handleNumberOfSamplesReleased);
+        this->numberOfSamplesSlider->setSliderPosition(1000);
+
+        // set transmit frequency
+        yposRangeSonar = yposRangeSonar + 100;
+        frequencyRangeSlider = new QSlider(Qt::Horizontal, this);
+        frequencyRangeSlider->setFocusPolicy(Qt::StrongFocus);
+        frequencyRangeSlider->setMaximum(800);
+        frequencyRangeSlider->setMinimum(700);
+        frequencyRangeSlider->setGeometry(QRect(QPoint(xposRangeSonar, yposRangeSonar), QSize(sizeOfSlider, 20)));
+        frequencyRangeLabel = new QLabel("Frequency Range:", this);
+        frequencyRangeLabel->setGeometry(
+                QRect(QPoint(screenWidth - 1.3 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
+        frequencyRangeTicks = new QLabel("700                              750                               800",
+                                this);
+        frequencyRangeTicks->setGeometry(QRect(QPoint(xposRangeSonar - 3, yposRangeSonar + 25), QSize(sizeOfSlider, 15)));
+        currentfrequencyRange = new QLabel("750", this);
+        currentfrequencyRange->setGeometry(
+                QRect(QPoint(screenWidth - 0.8 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
+        connect(frequencyRangeSlider, &QSlider::valueChanged, this, &MainWindow::handleFrequencyRangeSlider);
+        connect(frequencyRangeSlider, &QSlider::sliderReleased, this, &MainWindow::handleFrequencyRangeReleased);
+        this->frequencyRangeSlider->setSliderPosition(750);
+        //
+
         //send initial values to sonar
 //        this->handleSonarSliderReleased();
     }

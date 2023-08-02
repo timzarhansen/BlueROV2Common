@@ -65,7 +65,7 @@ void MainWindow::handleSonarSlider(int sonarRange) {
 void MainWindow::handleSonarSliderReleased() {
     //send current distance to the Sonar
 //    std::cout << "sonarRange send to Sonar: " << this->sonarRange << std::endl;
-    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange);
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange,this->frequencyRangeValue,this->numberOfSamplesValue);
 }
 
 void MainWindow::handleStrengthXYMovementSlider(int strength) {
@@ -87,8 +87,38 @@ void MainWindow::handleSonarStepSlider(int angularStepSize) {
 void MainWindow::handleSonarStepReleased() {
     //send current distance to the Sonar
 //    std::cout << "sonarStepSize send to Sonar: " << this->sonarStepSize << std::endl;
-    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange);
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange,this->frequencyRangeValue,this->numberOfSamplesValue);
 }
+
+void MainWindow::handleFrequencyRangeSlider(int angularStepSize) {
+    QString xstr = QString::number(angularStepSize);
+    this->frequencyRangeValue = angularStepSize;
+    this->currentfrequencyRange->setText(xstr);
+//    std::cout << "0" << std::endl;
+}
+
+void MainWindow::handleFrequencyRangeReleased() {
+    //send current distance to the Sonar
+//    std::cout << "sonarStepSize send to Sonar: " << this->sonarStepSize << std::endl;
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange,this->frequencyRangeValue,this->numberOfSamplesValue);
+
+}
+
+void MainWindow::handleNumberOfSamplesSlider(int angularStepSize) {
+    QString xstr = QString::number(angularStepSize);
+    this->numberOfSamplesValue = angularStepSize;
+    this->currentNumberOfSamples->setText(xstr);
+//    std::cout << "0" << std::endl;
+}
+
+void MainWindow::handleNumberOfSamplesReleased() {
+    //send current distance to the Sonar
+//    std::cout << "sonarStepSize send to Sonar: " << this->sonarStepSize << std::endl;
+    emit this->updateConfigSonar(this->sonarStepSize, this->sonarRange,this->frequencyRangeValue,this->numberOfSamplesValue);
+
+}
+
+
 
 void MainWindow::handleEKFReset() {
     std::cout << "send reset to EKF" << std::endl;

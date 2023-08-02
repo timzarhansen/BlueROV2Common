@@ -21,57 +21,30 @@
 
 class rosClassEKF {
 public:
-    rosClassEKF(ros::NodeHandle n_, std::string imuUsage, std::string dvlUsage) : currentEkf(
+    rosClassEKF(ros::NodeHandlePtr n_) : currentEkf(
             ros::Time::now()) {
+        // External = 0; Mavros = 1; Gazebo = 2
+        this->ournH = n_;
+        this->currentInputDVL = 0;
+        this->currentInputIMU = 0;
+        this->subscriberDVL.shutdown();
         this->rotationOfDVL = Eigen::AngleAxisd(0,
                                                 Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
         this->positionIMU = Eigen::Vector3d(0,0,0);
         this->positionDVL = Eigen::Vector3d(0,0,0);
-        //std::cout << "we are here" << std::endl;
-        //std::cout << imuUsage << std::endl;
-        if (imuUsage == "external") {
-            std::cout << "External IMU used for EKF" << std::endl;
-            this->subscriberIMU = n_.subscribe("imu/data_frd", 1000, &rosClassEKF::imuCallback, this);
-        } else {
-            std::cout << "Mavros IMU used for EKF" << std::endl;
-            this->subscriberIMU = n_.subscribe("mavros/imu/data_frd", 1000, &rosClassEKF::imuCallback, this);
-        }
-
-        if (dvlUsage == "external") {
-            std::cout << "External DVL used for EKF" << std::endl;
-            this->subscriberDVL = n_.subscribe("dvl/transducer_report", 1000, &rosClassEKF::DVLCallbackDVL, this);
-        } else {
-            if (dvlUsage == "gazebo") {
-                std::cout << "Gazebo DVL used for EKF" << std::endl;
-                this->subscriberVelocitySimulation = n_.subscribe("simulatedDVL", 1000,
-                                                                  &rosClassEKF::DVLCallbackSimulation,
-                                                                  this);
-            } else {
-
-                if (dvlUsage == "mavros") {
-
-                    std::cout << "Gazebo DVL used for EKF" << std::endl;
-                    this->subscriberVelocityMavros = n_.subscribe("mavros/local_position/velocity_body_frd", 1000,
-                                                                  &rosClassEKF::DVLCallbackMavros,
-                                                                  this);
 
 
-                } else {
-                    std::cout << "no matching DVL usage found" << std::endl;
-                    exit(-1);
-                }
-
-            }
+        this->subscriberIMU = this->ournH->subscribe("imu/data_frd", 1000, &rosClassEKF::imuCallback, this);
+        this->subscriberDVL = this->ournH->subscribe("dvl/transducer_report", 1000, &rosClassEKF::DVLCallbackDVL, this);
 
 
-        }
-        this->subscriberDepth = n_.subscribe("height_baro", 1000, &rosClassEKF::depthSensorCallback, this);
-        this->subscriberHeading = n_.subscribe("magnetic_heading", 1000, &rosClassEKF::headingCallback, this);
+        this->subscriberDepth = this->ournH->subscribe("height_baro", 1000, &rosClassEKF::depthSensorCallback, this);
+        this->subscriberHeading = this->ournH->subscribe("magnetic_heading", 1000, &rosClassEKF::headingCallback, this);
 
-        this->serviceResetEkf = n_.advertiseService("resetCurrentEKF", &rosClassEKF::resetEKF, this);
+        this->serviceResetEkf = this->ournH->advertiseService("resetCurrentEKF", &rosClassEKF::resetEKF, this);
 
-        this->publisherPoseEkf = n_.advertise<geometry_msgs::PoseWithCovarianceStamped>("publisherPoseEkf", 10);
-        this->publisherTwistEkf = n_.advertise<geometry_msgs::TwistWithCovarianceStamped>("publisherTwistEkf", 10);
+        this->publisherPoseEkf = this->ournH->advertise<geometry_msgs::PoseWithCovarianceStamped>("publisherPoseEkf", 10);
+        this->publisherTwistEkf = this->ournH->advertise<geometry_msgs::TwistWithCovarianceStamped>("publisherTwistEkf", 10);
 
 
     }
@@ -81,13 +54,16 @@ private:
 //    std::deque<mavros_msgs::Altitude::ConstPtr> depthDeque;
 //    std::deque<geometry_msgs::TwistStamped::ConstPtr> dvlDeque;
     ekfClassDVL currentEkf;
-    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults, subscriberVelocitySimulation, subscriberVelocityMavros;
+    ros::Subscriber subscriberIMU, subscriberDepth, subscriberHeading, subscriberDVL, subscriberSlamResults;
     ros::Publisher publisherPoseEkf, publisherTwistEkf;
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
     Eigen::Vector3d positionIMU,positionDVL;
     ros::ServiceServer serviceResetEkf;
-
+    int currentInputDVL;
+    int currentInputIMU;
+    ros::NodeHandlePtr ournH;
+    
     void imuCallbackHelper(const sensor_msgs::Imu::ConstPtr &msg) {
         Eigen::Quaterniond tmpRot;
         tmpRot.x() = msg.get()->orientation.x;
@@ -243,7 +219,49 @@ public:
         this->positionIMU.x()=config.xPositionIMU;
         this->positionIMU.y()=config.yPositionIMU;
         this->positionIMU.z()=config.zPositionIMU;
+        
+        // External = 0; Mavros = 1; Gazebo = 2
+        if(this->currentInputIMU !=config.IMUInput){
+            if (config.IMUInput == 0) {
+                std::cout << "External IMU used for EKF" << std::endl;
+                this->subscriberIMU.shutdown();
+                this->subscriberIMU = this->ournH->subscribe("imu/data_frd", 1000, &rosClassEKF::imuCallback, this);
 
+            }
+            if(config.IMUInput == 1) {
+                std::cout << "Mavros IMU used for EKF" << std::endl;
+                this->subscriberIMU.shutdown();
+                this->subscriberIMU = this->ournH->subscribe("mavros/imu/data_frd", 1000, &rosClassEKF::imuCallback, this);
+            }
+            if(config.IMUInput == 2) {
+                std::cout << "not supported therefore kept the old input" << std::endl;
+            }
+            this->currentInputIMU = config.IMUInput;
+        }
+
+        if(this->currentInputDVL !=config.DVLInput){
+            if (config.DVLInput == 0) {
+                this->subscriberDVL.shutdown();
+                std::cout << "External DVL used for EKF" << std::endl;
+                this->subscriberDVL = this->ournH->subscribe("dvl/transducer_report", 1000, &rosClassEKF::DVLCallbackDVL, this);
+            }
+            if (config.DVLInput == 1) {
+                this->subscriberDVL.shutdown();
+                std::cout << "Mavros DVL used for EKF" << std::endl;
+                this->subscriberDVL = this->ournH->subscribe("mavros/local_position/velocity_body_frd", 1000,
+                                                               &rosClassEKF::DVLCallbackMavros,
+                                                               this);
+            }
+            if (config.DVLInput == 2) {
+                this->subscriberDVL.shutdown();
+                std::cout << "Gazebo DVL used for EKF" << std::endl;
+                this->subscriberDVL = this->ournH->subscribe("simulatedDVL", 1000,
+                                                               &rosClassEKF::DVLCallbackSimulation,
+                                                               this);
+            }
+            this->currentInputDVL = config.DVLInput;
+        }
+        
         this->updateSlamMutex.unlock();
     }
 };
@@ -272,52 +290,52 @@ int main(int argc, char **argv) {
 
     ros::init(argc, argv, "ekffordvlwithros");
     ros::start();
-    ros::NodeHandle n_;
+    ros::NodeHandlePtr n_ = boost::make_shared<ros::NodeHandle>();
 
-    std::string whichIMUUsed;
-    //whichIMUUsed = "external";
-
-    if (n_.getParam("/EKFDVL/imu_used", whichIMUUsed)) {
-        ROS_INFO("IMU used is: %s", whichIMUUsed.c_str());
-    } else {
-        std::vector<std::string> keys;
-        n_.getParamNames(keys);
-
-        for (int i = 0; i < keys.size(); i++) {
-            std::cout << keys[i] << std::endl;
-        }
-        ROS_ERROR("Failed to get IMU parameter, which to use");
-    }
-
-    if (whichIMUUsed != "external" && whichIMUUsed != "mavros") {
-        ROS_ERROR("You have to use mavros or external as parameter for imu_used");
-        exit(-1);
-    }
-
-    std::string whichDVLUsed;
-    //whichDVLUsed = "external";
-
-    if (n_.getParam("/EKFDVL/dvl_used", whichDVLUsed)) {
-        ROS_INFO("DVL used is: %s", whichDVLUsed.c_str());
-    } else {
-        std::vector<std::string> keys;
-        n_.getParamNames(keys);
-
-        for (int i = 0; i < keys.size(); i++) {
-            std::cout << keys[i] << std::endl;
-        }
-        ROS_ERROR("Failed to get DVL parameter, which to use");
-    }
-
-    if (whichDVLUsed != "external" && whichDVLUsed != "gazebo" && whichDVLUsed != "mavros") {
-        ROS_ERROR("You have to use gazebo or external or mavros as parameter for dvl_used");
-        exit(-1);
-    }
+//    std::string whichIMUUsed;
+//    //whichIMUUsed = "external";
+//
+//    if (n_.getParam("/EKFDVL/imu_used", whichIMUUsed)) {
+//        ROS_INFO("IMU used is: %s", whichIMUUsed.c_str());
+//    } else {
+//        std::vector<std::string> keys;
+//        n_.getParamNames(keys);
+//
+//        for (int i = 0; i < keys.size(); i++) {
+//            std::cout << keys[i] << std::endl;
+//        }
+//        ROS_ERROR("Failed to get IMU parameter, which to use");
+//    }
+//
+//    if (whichIMUUsed != "external" && whichIMUUsed != "mavros") {
+//        ROS_ERROR("You have to use mavros or external as parameter for imu_used");
+//        exit(-1);
+//    }
+//
+//    std::string whichDVLUsed;
+//    //whichDVLUsed = "external";
+//
+//    if (n_.getParam("/EKFDVL/dvl_used", whichDVLUsed)) {
+//        ROS_INFO("DVL used is: %s", whichDVLUsed.c_str());
+//    } else {
+//        std::vector<std::string> keys;
+//        n_.getParamNames(keys);
+//
+//        for (int i = 0; i < keys.size(); i++) {
+//            std::cout << keys[i] << std::endl;
+//        }
+//        ROS_ERROR("Failed to get DVL parameter, which to use");
+//    }
+//
+//    if (whichDVLUsed != "external" && whichDVLUsed != "gazebo" && whichDVLUsed != "mavros") {
+//        ROS_ERROR("You have to use gazebo or external or mavros as parameter for dvl_used");
+//        exit(-1);
+//    }
 
 
 //    rosClassEKF rosClassEKFObject(n_,  M_PI / 4.0 + M_PI / 2.0, whichIMUUsed, whichDVLUsed); // KELLER VALENTIN OLD
 //    rosClassEKF rosClassEKFObject(n_, -M_PI / 4.0 , whichIMUUsed, whichDVLUsed);//TUHH TANK
-    rosClassEKF rosClassEKFObject(n_, whichIMUUsed, whichDVLUsed);
+    rosClassEKF rosClassEKFObject(n_);
 
     //ros::spin();
     std::thread t1(spinningRos);
@@ -329,8 +347,8 @@ int main(int argc, char **argv) {
     server.setCallback(f);
 
 
-    ros::Publisher publisherPoseEkfMavros = n_.advertise<geometry_msgs::PoseStamped>("mavros/vision_pose/pose", 10);
-    ros::Publisher publisherEasyReadEkf = n_.advertise<commonbluerovmsg::stateOfBlueRov>("ekfStateRPY", 10);
+    ros::Publisher publisherPoseEkfMavros = (*n_).advertise<geometry_msgs::PoseStamped>("mavros/vision_pose/pose", 10);
+    ros::Publisher publisherEasyReadEkf = (*n_).advertise<commonbluerovmsg::stateOfBlueRov>("ekfStateRPY", 10);
     ros::Rate ourRate = ros::Rate(30);
     //sending position to Mavros mavros/vision_pose/pose
     while (ros::ok()) {

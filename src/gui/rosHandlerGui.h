@@ -58,7 +58,7 @@ public slots:
 
     void updateDesiredState(double desiredHeight, double desiredRoll,double desiredPitch, double desiredYaw, double desiredXMovement, double desiredYMovement,bool holdPosition);
     void resetEKFEstimator(bool resetOnlyGraph);
-    void updateConfigSonar(int stepSize, int rangeSonar);
+    void updateConfigSonar(int stepSize, int rangeSonar,int frequencyRange,int numberOfSamples);
     void updateAngleCamera(int angleCamera);
     void updateLightIntensity(int intensityLight);
 
