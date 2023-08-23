@@ -29,7 +29,7 @@
 
 
     <!-- DVL -->
-    <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" required="true">
+    <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" required="false">
         <param name="ip" value="10.42.0.211"/>
     </node>
 
@@ -51,11 +51,11 @@
     <rosparam command="load" file="$(find bluerov2common)/config/tritech_micron_config.yaml"/>
 
     <!--Create a sonar driver node-->
-    <node pkg="micron_driver_ros" type="micron_driver_ros_node" name="micron_driver" output="screen" />
+<!--     <node pkg="micron_driver_ros" type="micron_driver_ros_node" name="micron_driver" output="screen" /> -->
 
     <!-- Controller -->
     <node pkg="bluerov2common" type="controllerbluerov2" name="controllerbluerov2" output="screen" required="true">
     </node>
 
-    <!-- rosbag record camera/camera_info camera/image_raw/compressed desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity  mavros/gpsstatus/gps1/rtk mavros/gpsstatus/gps1/raw -->
+    <!-- rosbag record camera/camera_info camera/image_raw/compressed desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity  mavros/gpsstatus/gps1/rtk mavros/gpsstatus/gps1/raw /micron_driver/tritech_sonar/scan_line -->
 </launch>

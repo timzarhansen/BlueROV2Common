@@ -6,6 +6,6 @@
 
     </node>
 
-
     <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /EKFDVL $(find bluerov2common)/config/ekfRobot.yaml" />
+<!--     <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /EKFDVL $(find bluerov2common)/config/ekfTUHH.yaml" /> -->
 </launch>

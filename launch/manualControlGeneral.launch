@@ -13,4 +13,6 @@
     </include>
     <include file="$(find bluerov2common)/launch/heightPublisher.launch">
     </include>
+    <include file="$(find bluerov2common)/launch/restartPiSensorTube.launch">
+    </include>
 </launch>

@@ -2,13 +2,13 @@
 
 from commonbluerovmsg.srv import *
 import rospy
-#import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import pigpio
 import time
 
 
 class pwmClass:
-    sonarPin = 13
+    sonarPin = 20
     #localPiGPIO = None
     gpioPinSonar = None
 
@@ -20,6 +20,7 @@ class pwmClass:
         #self.gpioPinLight.start(0)
         self.gpioPinSonar = pigpio.pi()
         self.gpioPinSonar.set_mode(self.sonarPin, pigpio.OUTPUT)
+        self.gpioPinSonar.write(self.sonarPin,0)
         #self.gpioPinSonar.hardware_PWM(self.sonarPin, 50, 0)#10000
 
     def handleSonar(self, req):
