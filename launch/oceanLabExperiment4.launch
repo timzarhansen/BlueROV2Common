@@ -1,0 +1,65 @@
+<launch>
+
+    <node name="giverights" pkg="bluerov2common" type="giveRights.sh" />
+
+
+    <!-- Sonar -->
+    <node pkg="tf" type="static_transform_publisher" name="transform_sonar_frame" args="0 0 0 0 0 0 1 map sonar_frame 10" />
+    <env name="emulated_sonar" value="false" />
+    <node pkg="ping360_sonar" type="ping360_node" name="ping360_node" output="screen">
+        <param name="device" value="/dev/ttyUSB2"/>
+        <param name="baudrate" value="115200"/>
+        <param name="debug" value="False"/>
+        <param name="imgSize" value="500"/>
+        <param name="gain" value="0"/>
+        <param name="step" value="1"/>
+        <param name="numberOfSamples" value="200"/>
+        <param name="transmitFrequency" value="740"/>
+        <param name="sonarRange" value="10"/>
+        <param name="speedOfSound" value="1500"/>
+        <param name="queueSize" value="1"/>
+        <param name="threshold" value="10"/>
+        <param name="enableImageTopic" value="False"/>
+        <param name="enableScanTopic" value="False"/>
+        <param name="enableDataTopic" value="True"/>
+        <param name="maxAngle" value="400"/>
+        <param name="minAngle" value="0"/>
+        <param name="oscillate" value="false"/>
+    </node>
+
+
+    <!-- DVL -->
+    <node name="waterlinked_dvl_tcp_node" pkg="waterlinked_dvl" type="waterlinked_dvl_tcp_node" output="screen" required="false">
+        <param name="ip" value="10.42.0.211"/>
+    </node>
+
+
+    <!-- IMU-->
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
+        <rosparam command="load" file="$(find bluerov2common)/config/xsens_mti_node.yaml" />
+    </node>
+
+    <!-- Ekf -->
+    <node pkg="bluerov2common" type="EKFDVL" name="EKFDVL" output="screen" required="false">
+    </node>
+    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /EKFDVL $(find bluerov2common)/config/ekfRobot.yaml" />
+
+
+    <node pkg="bluerov2common" type="conversionenutofrd" name="conversionenutofrd" output="screen" required="true">
+    </node>
+
+<!--     <rosparam command="load" file="$(find bluerov2common)/config/tritech_micron_config.yaml"/> -->
+
+    <!--Create a sonar driver node-->
+<!--     <node pkg="micron_driver_ros" type="micron_driver_ros_node" name="micron_driver" output="screen" /> -->
+
+    <!-- Controller -->
+    <node pkg="bluerov2common" type="controllerbluerov2" name="controllerbluerov2" output="screen" required="true">
+    </node>
+
+    <!-- rosbag record camera/camera_info camera/image_raw/compressed desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity  mavros/gpsstatus/gps1/rtk mavros/gpsstatus/gps1/raw /micron_driver/tritech_sonar/scan_line -->
+    <!-- rosbag record camera/camera_info camera/image_raw/compressed desiredStateOfBluerov2 dvl/pose dvl/transducer_report ekfStateRPY imu/data_frd imu/data height_baro mavros/imu/data mavros/imu/data_frd publisherPoseEkf publisherTwistEkf sonar/intensity  positionOverTime loopClosures slamEndPose -->
+
+
+
+</launch>

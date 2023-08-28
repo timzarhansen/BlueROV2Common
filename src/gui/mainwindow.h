@@ -293,13 +293,13 @@ private:
         yposRangeSonar = yposRangeSonar + 100;
         frequencyRangeSlider = new QSlider(Qt::Horizontal, this);
         frequencyRangeSlider->setFocusPolicy(Qt::StrongFocus);
-        frequencyRangeSlider->setMaximum(800);
-        frequencyRangeSlider->setMinimum(700);
+        frequencyRangeSlider->setMaximum(1000);
+        frequencyRangeSlider->setMinimum(500);
         frequencyRangeSlider->setGeometry(QRect(QPoint(xposRangeSonar, yposRangeSonar), QSize(sizeOfSlider, 20)));
         frequencyRangeLabel = new QLabel("Frequency Range:", this);
         frequencyRangeLabel->setGeometry(
                 QRect(QPoint(screenWidth - 1.3 * sizeOfSlider, yposRangeSonar - 50), QSize(200, 50)));
-        frequencyRangeTicks = new QLabel("700                              750                               800",
+        frequencyRangeTicks = new QLabel("500                              750                              1000",
                                 this);
         frequencyRangeTicks->setGeometry(QRect(QPoint(xposRangeSonar - 3, yposRangeSonar + 25), QSize(sizeOfSlider, 15)));
         currentfrequencyRange = new QLabel("750", this);
