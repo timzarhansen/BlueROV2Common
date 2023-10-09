@@ -6,6 +6,7 @@
 #define BLUEROV2COMMON_GENERALHELPFULTOOLS_H
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
+//#include "eigen3/Eigen/Geometry"
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <iostream>

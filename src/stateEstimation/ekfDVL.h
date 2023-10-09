@@ -7,7 +7,7 @@
 
 #include <deque>
 //#include "../src/slamTools/generalHelpfulTools.h"
-#include "../generalTools/generalHelpfulTools.h"
+#include "generalHelpfulTools.h"
 #include "pose.h"
 //#include "../src/slamTools/slamToolsRos.h"
 //asynchronous EKF with reset of POS correction
@@ -15,7 +15,7 @@
 
 class ekfClassDVL {
 public:
-    ekfClassDVL(ros::Time timeRos) {
+    ekfClassDVL(rclcpp::Time timeRos) {
         this->stateOfEKF.position = Eigen::Vector3f(0, 0, 0);
         this->stateOfEKF.rotation = Eigen::Vector3f(0, 0, 0);
         this->stateOfEKF.velocity = Eigen::Vector3f(0, 0, 0);

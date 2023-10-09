@@ -1,0 +1,43 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+/ekf_ns:
+  ros__parameters:
+    DVLInput: 0
+    IMUInput: 0
+
+    measurementImuPitch: 100.0
+    measurementImuRoll: 100.0
+    measurementImuVelocityVelPitch: 0.1
+    measurementImuVelocityVelRoll: 0.1
+    measurementImuVelocityVelYaw: 0.1
+    measurementNoiseDVLVX: 0.1
+    measurementNoiseDVLVY: 0.1
+    measurementNoiseDVLVZ: 0.1
+    measurementNoiseDepth: 0.5
+    name: Default
+    parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+      state: []
+    parent: 0
+    processNoisePitch: 0.01
+    processNoiseRoll: 0.01
+    processNoiseVX: 0.005
+    processNoiseVY: 0.005
+    processNoiseVZ: 0.01
+    processNoiseVelPitch: 0.001
+    processNoiseVelRoll: 0.001
+    processNoiseVelYaw: 0.001
+    processNoiseX: 0.02
+    processNoiseY: 0.02
+    processNoiseYaw: 0.02
+    processNoiseZ: 0.005
+    state: true
+    type: ''
+    xPositionDVL: 0.0
+    xPositionIMU: 0.0
+    yPositionDVL: 0.0
+    yPositionIMU: 0.0
+    yawRotationDVL: 0.0
+    yawRotationIMU: 0.0
+    zPositionDVL: 0.0
+    zPositionDepthSensor: 0.0
+    zPositionIMU: 0.0
+

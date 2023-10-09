@@ -8,19 +8,34 @@
   <author>Tim Hansen</author>
   <maintainer email="t.hansen@jacobs-university.de">Tim Hansen</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>rosconsole</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>roscpp_serialization</build_depend>
-  <build_depend>rostime</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>underwaterslam</build_depend>
-  <build_depend>commonbluerovmsg</build_depend>
-  <build_depend>ping360_sonar</build_depend>
-  <build_depend>dynamic_reconfigure</build_depend>
-  <exec_depend>message_runtime</exec_depend>
-  <depend>image_transport</depend>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>commonbluerovmsg</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+
+<!--  <buildtool_depend>catkin</buildtool_depend>-->
+
+<!--  <build_depend>rosconsole</build_depend>-->
+<!--  <build_depend>roscpp</build_depend>-->
+<!--  <build_depend>roscpp_serialization</build_depend>-->
+<!--  <build_depend>rostime</build_depend>-->
+<!--  <build_depend>std_msgs</build_depend>-->
+<!--  <build_depend>message_generation</build_depend>-->
+<!--  <build_depend>underwaterslam</build_depend>-->
+<!--  <build_depend>commonbluerovmsg</build_depend>-->
+<!--  <build_depend>ping360_sonar</build_depend>-->
+<!--  <build_depend>dynamic_reconfigure</build_depend>-->
+<!--  <exec_depend>message_runtime</exec_depend>-->
+<!--  <depend>image_transport</depend>-->
 
 </package>
