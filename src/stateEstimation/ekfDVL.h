@@ -65,16 +65,16 @@ public:
     }
 
     void
-    predictionImu(double xAccel, double yAccel, double zAccel, Eigen::Quaterniond currentRotation,Eigen::Vector3d positionIMU, ros::Time timeStamp);
+    predictionImu(double xAccel, double yAccel, double zAccel, Eigen::Quaterniond currentRotation,Eigen::Vector3d positionIMU, rclcpp::Time timeStamp);
 
-    void simplePrediction(ros::Time timeStamp);
+    void simplePrediction(rclcpp::Time timeStamp);
 
-    void updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond rotationOfDVL,Eigen::Vector3d positionDVL, ros::Time timeStamp);
+    void updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond rotationOfDVL,Eigen::Vector3d positionDVL, rclcpp::Time timeStamp);
 
     void updateIMU(double roll, double pitch, double xAngularVel, double yAngularVel, double zAngularVel,
-                   Eigen::Quaterniond currentRotation, ros::Time timeStamp);
+                   Eigen::Quaterniond currentRotation, rclcpp::Time timeStamp);
 
-    void updateHeight(double depth, ros::Time timeStamp);
+    void updateHeight(double depth, rclcpp::Time timeStamp);
 
     pose getState();
 
@@ -86,7 +86,7 @@ public:
 
     Eigen::VectorXd innovationStateDiff(Eigen::VectorXd z, Eigen::MatrixXd H, Eigen::VectorXd currentStateBeforeUpdate);
 
-    void updateHeading(double yawRotation, ros::Time timeStamp);
+    void updateHeading(double yawRotation, rclcpp::Time timeStamp);
 
     void setProcessNoise(double xNoise, double yNoise, double zNoise, double vxNoise, double vyNoise, double vzNoise,
                          double rNoise, double pNoise, double yawNoise, double vrNoise, double vpNoise, double vyawNoise);
@@ -102,7 +102,7 @@ private:
     //std::deque<edge> lastPositionDifferences;
     std::deque<pose> recentPoses;
     Eigen::MatrixXd processNoise, measurementNoiseDepth, measurementNoiseDVL, measurementImuVelocity, measurementNoiseSlam;
-    ros::Time lastUpdateTime;
+    rclcpp::Time lastUpdateTime;
 };
 
 

@@ -4,7 +4,7 @@
 #include "ekfDVL.h"
 
 void ekfClassDVL::predictionImu(double xAccel, double yAccel, double zAccel, Eigen::Quaterniond currentRotation,Eigen::Vector3d positionIMU,
-                                ros::Time timeStamp) {
+                                rclcpp::Time timeStamp) {
     //for saving the current EKF pose difference in
     Eigen::VectorXd currentStateBeforeUpdate = this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel();
 
@@ -41,7 +41,7 @@ void ekfClassDVL::predictionImu(double xAccel, double yAccel, double zAccel, Eig
 //    std::cout << localAcceleration << std::endl;
 //    localAcceleration = bodyAccelerationReal1;
 
-    double timeDiff = (timeStamp - this->stateOfEKF.timeLastPrediction).toSec();
+    double timeDiff = (timeStamp - this->stateOfEKF.timeLastPrediction).seconds();
 
     if (timeDiff > 0.4 || timeDiff < 0) {
         timeDiff = 0.4;
@@ -74,9 +74,9 @@ void ekfClassDVL::predictionImu(double xAccel, double yAccel, double zAccel, Eig
 
 }
 
-void ekfClassDVL::simplePrediction(ros::Time timeStamp) {
+void ekfClassDVL::simplePrediction(rclcpp::Time timeStamp) {
     //for saving the current EKF pose difference in
-    double timeDiff = (timeStamp - this->stateOfEKF.timeLastPrediction).toSec();
+    double timeDiff = (timeStamp - this->stateOfEKF.timeLastPrediction).seconds();
 
     if (timeDiff > 0.4 || timeDiff < 0) {
         timeDiff = 0.4;
@@ -107,7 +107,7 @@ void ekfClassDVL::simplePrediction(ros::Time timeStamp) {
 
 void ekfClassDVL::updateIMU(double roll, double pitch, double xAngularVel, double yAngularVel, double zAngularVel,
                             Eigen::Quaterniond currentRotation,
-                            ros::Time timeStamp) {
+                            rclcpp::Time timeStamp) {
     //for saving the current EKF pose difference in
     Eigen::VectorXd currentStateBeforeUpdate = this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel();
 
@@ -151,7 +151,7 @@ void ekfClassDVL::updateIMU(double roll, double pitch, double xAngularVel, doubl
 }
 
 void
-ekfClassDVL::updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond rotationOfDVL,Eigen::Vector3d positionDVL, ros::Time timeStamp) {
+ekfClassDVL::updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond rotationOfDVL,Eigen::Vector3d positionDVL, rclcpp::Time timeStamp) {
     //for saving the current EKF pose difference in
 
     Eigen::VectorXd currentStateBeforeUpdate = this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel();
@@ -198,7 +198,7 @@ ekfClassDVL::updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond
 }
 
 void
-ekfClassDVL::updateHeight(double depth, ros::Time timeStamp) {
+ekfClassDVL::updateHeight(double depth, rclcpp::Time timeStamp) {
     if (isnan(depth)) {
         depth = 0;
     }
@@ -220,7 +220,7 @@ ekfClassDVL::updateHeight(double depth, ros::Time timeStamp) {
 }
 
 void
-ekfClassDVL::updateHeading(double yawRotation, ros::Time timeStamp) {
+ekfClassDVL::updateHeading(double yawRotation, rclcpp::Time timeStamp) {
     if (isnan(yawRotation)) {
         return;
     }

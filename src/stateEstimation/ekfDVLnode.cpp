@@ -1,7 +1,12 @@
 //
 // Created by jurobotics on 13.09.21.
+
 #include "ekfDVL.h"
 #include "rclcpp/rclcpp.hpp"
+
+// just for tricking compiler
+#include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
+
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
@@ -28,17 +33,17 @@
 //#include <dynamic_reconfigure/server.h>
 #include <commonbluerovmsg/msg/state_of_blue_rov.hpp>
 
-class rosClassEKF : public rclcpp::Node {
+class RosClassEKF : public rclcpp::Node {
 public:
-    rosClassEKF() : Node("ekfStateEstimation"),currentEkf(rclcpp::Clock(RCL_ROS_TIME).now()) {
-        auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
+    RosClassEKF() : Node("ekfStateEstimation"), currentEkf(rclcpp::Clock(RCL_ROS_TIME).now()) {
+        rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
 
 
         // External = 0; Mavros = 1; Gazebo = 2
 
         this->currentInputDVL = 0;
         this->currentInputIMU = 0;
-        this->subscriberDVL.shutdown();
+//        this->subscriberDVL.shutdown();
         this->rotationOfDVL = Eigen::AngleAxisd(0,
                                                 Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
         this->positionIMU = Eigen::Vector3d(0, 0, 0);
@@ -46,25 +51,29 @@ public:
 
 
         this->subscriberIMU = this->create_subscription<sensor_msgs::msg::Imu>("imu/data_frd", qos,
-                                                                               std::bind(&rosClassEKF::imuCallback,
-                                                                                         this));
-        this->subscriberDVL = this->create_subscription<waterlinked_dvl::TransducerReportStamped>(
-                "dvl/transducer_report", qos, &rosClassEKF::DVLCallbackDVL, this);
+                                                                               std::bind(&RosClassEKF::imuCallback,
+                                                                                         this, std::placeholders::_1));
+        std::cout << "test DVL:" << std::endl;
+//        this->subscriberDVL = this->create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
+//                "dvl/transducer_report", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
 
 
         this->subscriberDepth = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
                                                                                                 std::bind(
-                                                                                                        &rosClassEKF::depthSensorCallback,
-                                                                                                        this));
+                                                                                                        &RosClassEKF::depthSensorCallback,
+                                                                                                        this,
+                                                                                                        std::placeholders::_1));
         this->subscriberHeading = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("magnetic_heading", qos,
                                                                                                 std::bind(
-                                                                                                        &rosClassEKF::headingCallback,
-                                                                                                        this));
+                                                                                                        &RosClassEKF::headingCallback,
+                                                                                                        this,
+                                                                                                        std::placeholders::_1));
 
         this->serviceResetEkf = this->create_service<commonbluerovmsg::srv::ResetEkf>("resetCurrentEKF",
-                                                                                      std::bind(&rosClassEKF::resetEKF,
+                                                                                      std::bind(&RosClassEKF::resetEKF,
                                                                                                 this,
-                                                                                                std::placeholders::_1));
+                                                                                                std::placeholders::_1,
+                                                                                                std::placeholders::_2));
 
         this->publisherPoseEkf = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
                 "publisherPoseEkf", qos);
@@ -83,7 +92,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriberIMU;
     rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepth;
     rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr subscriberHeading;
-    rclcpp::Subscription<waterlinked_dvl::TransducerReportStamped>::SharedPtr subscriberDVL;
+    rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr subscriberDVL;
 
 
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publisherPoseEkf;
@@ -149,18 +158,19 @@ private:
         this->updateSlamMutex.unlock();
     }
 
-    void DVLCallbackDVLHelper(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
-        if (!msg->report.velocity_valid || msg->report.status != 0) {
-            //if we dont know anything, the ekf should just go to 0, else the IMU gives direction.
-            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, this->positionDVL, msg->header.stamp);
-        } else {
-            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,
-                                       this->positionDVL,
-                                       msg->header.stamp);
-        }
+    void DVLCallbackDVLHelper(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr &msg) {
+//        if (!msg->report.velocity_valid || msg->report.status != 0) {
+//            //if we dont know anything, the ekf should just go to 0, else the IMU gives direction.
+//            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, this->positionDVL, msg->header.stamp);
+//        } else {
+//            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,
+//                                       this->positionDVL,
+//                                       msg->header.stamp);
+//        }
+        return;
     }
 
-    void DVLCallbackDVL(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
+    void DVLCallbackDVL(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr &msg) {
         this->updateSlamMutex.lock();
         this->DVLCallbackDVLHelper(msg);
         this->updateSlamMutex.unlock();
@@ -191,11 +201,11 @@ private:
     }
 
 
-    bool resetEKF(commonbluerovmsg::srv::ResetEkf::Request &req, commonbluerovmsg::srv::ResetEkf::Response &res) {
+    bool resetEKF(const std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Request> req, std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Response> res) {
         this->updateSlamMutex.lock();
-        this->currentEkf.resetToPos(req.x_pos, req.y_pos, req.yaw, req.reset_covariances);
+        this->currentEkf.resetToPos(req->x_pos, req->y_pos, req->yaw, req->reset_covariances);
         this->updateSlamMutex.unlock();
-        res.reset_done = true;
+        res->reset_done = true;
         return true;
     }
 
@@ -206,7 +216,7 @@ private:
     }
 
     void depthSensorHelper(const commonbluerovmsg::msg::HeightStamped::SharedPtr msg) {
-        this->currentEkf.updateHeight(msg->height, msg->timestamp);
+        this->currentEkf.updateHeight(msg->height, rclcpp::Time(msg->timestamp));
     };
 
     void headingCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg) {
@@ -261,7 +271,7 @@ public:
 //                this->subscriberIMU.reset();// MAYBE DOES NOT WORK.
 //
 //                this->subscriberIMU = this->create_subscription<sensor_msgs::msg::Imu>("imu/data_frd", qos, std::bind(
-//                        &rosClassEKF::imuCallback, this));
+//                        &RosClassEKF::imuCallback, this));
 //
 //            }
 //            if (config.IMUInput == 1) {
@@ -269,7 +279,7 @@ public:
 //                this->subscriberIMU.reset();// MAYBE DOES NOT WORK.
 //                this->subscriberIMU = this->create_subscription<sensor_msgs::msg::Imu>("mavros/imu/data_frd", qos,
 //                                                                                       std::bind(
-//                                                                                               &rosClassEKF::imuCallback,
+//                                                                                               &RosClassEKF::imuCallback,
 //                                                                                               this));
 //
 //            }
@@ -284,20 +294,20 @@ public:
 //                this->subscriberDVL.shutdown();
 //                std::cout << "External DVL used for EKF" << std::endl;
 //                this->subscriberDVL = this->ournH->subscribe("dvl/transducer_report", 1000,
-//                                                             &rosClassEKF::DVLCallbackDVL, this);
+//                                                             &RosClassEKF::DVLCallbackDVL, this);
 //            }
 //            if (config.DVLInput == 1) {
 //                this->subscriberDVL.shutdown();
 //                std::cout << "Mavros DVL used for EKF" << std::endl;
 //                this->subscriberDVL = this->ournH->subscribe("mavros/local_position/velocity_body_frd", 1000,
-//                                                             &rosClassEKF::DVLCallbackMavros,
+//                                                             &RosClassEKF::DVLCallbackMavros,
 //                                                             this);
 //            }
 //            if (config.DVLInput == 2) {
 //                this->subscriberDVL.shutdown();
 //                std::cout << "Gazebo DVL used for EKF" << std::endl;
 //                this->subscriberDVL = this->ournH->subscribe("simulatedDVL", 1000,
-//                                                             &rosClassEKF::DVLCallbackSimulation,
+//                                                             &RosClassEKF::DVLCallbackSimulation,
 //                                                             this);
 //            }
 //            this->currentInputDVL = config.DVLInput;
@@ -326,13 +336,13 @@ int main(int argc, char **argv) {
 
 
     rclcpp::init(argc, argv);
-//    auto node = std::make_shared<rosClassEKF>();
-    rclcpp::spin(std::make_shared<rosClassEKF>());
+//    auto node = std::make_shared<RosClassEKF>();
+    rclcpp::spin(std::make_shared<RosClassEKF>());
 
 
     rclcpp::shutdown();
 
-//    rosClassEKF rosClassEKFObject(n_);
+//    RosClassEKF rosClassEKFObject(n_);
 
     //rclcpp::spin();
 //    std::thread t1(spinningRos);
@@ -340,7 +350,7 @@ int main(int argc, char **argv) {
 //    dynamic_reconfigure::Server<underwaterslam::ekfParameterConfig> server;
 //    dynamic_reconfigure::Server<underwaterslam::ekfParameterConfig>::CallbackType f;
 //
-//    f = boost::bind(&rosClassEKF::callbackReconfiguration, &rosClassEKFObject, _1, _2);
+//    f = boost::bind(&RosClassEKF::callbackReconfiguration, &rosClassEKFObject, _1, _2);
 //    server.setCallback(f);
 //
 //

@@ -16,7 +16,7 @@ public:
     Eigen::Vector3f velocity;
     Eigen::Vector3f angleVelocity;
     Eigen::MatrixXd covariance;
-    ros::Time timeLastPrediction;
+    rclcpp::Time timeLastPrediction;
 
     Eigen::VectorXd getStatexyzvxvyvzrpyrvelpvelyvel() {
         Eigen::VectorXd state = Eigen::VectorXd::Zero(12);
