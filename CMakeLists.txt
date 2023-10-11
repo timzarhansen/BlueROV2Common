@@ -41,9 +41,9 @@ ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg)
 
 target_link_libraries(ekfNode generalhelpfullib )
 
-add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )
-ament_target_dependencies(testFile rclcpp std_msgs sensor_msgs commonbluerovmsg)
-target_link_libraries(testFile generalhelpfullib )
+#add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )
+#ament_target_dependencies(testFile rclcpp std_msgs sensor_msgs commonbluerovmsg)
+#target_link_libraries(testFile generalhelpfullib )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
