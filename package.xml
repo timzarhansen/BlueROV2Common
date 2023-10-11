@@ -11,6 +11,7 @@
 
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
@@ -19,7 +20,7 @@
   <depend>commonbluerovmsg</depend>
   <depend>visualization_msgs</depend>
   <depend>waterlinked_a50</depend>
-
+  <depend>rclpy</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

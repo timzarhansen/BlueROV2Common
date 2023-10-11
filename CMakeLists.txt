@@ -20,11 +20,16 @@ project(bluerov2common)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3)
 find_package(tf2 REQUIRED)
+
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+
 #find_package(Qt5 COMPONENTS Core Gui  Widgets Gamepad REQUIRED)
 #find_package(OpenCV REQUIRED)
 #find_package(Qt5PrintSupport REQUIRED)
 
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -60,80 +65,23 @@ ament_target_dependencies(controllerbluerov2 rclcpp std_msgs sensor_msgs commonb
 
 
 
+install(TARGETS
+        ekfNode
+        controllerbluerov2
+        DESTINATION lib/${PROJECT_NAME}
+)
 
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+ament_python_install_package(${PROJECT_NAME})
 
-## Generate messages in the 'msg' folder
-#add_message_files(
-#    FILES
-#    leakageDetection.msg
-#    desiredStateForRobot.msg
-#    staterobotforevaluation.msg
-#   Message1.msg
-#   Message2.msg
-#)
-#add_message_files(DIRECTORY msg FILES Num.msg)
+install(PROGRAMS
+        scripts/pwmServices.py
+        scripts/leakageSensor.py
+        DESTINATION lib/${PROJECT_NAME}
+)
 
 
-## Generate services in the 'srv' folder
-#add_service_files(
-#    FILES
-#    cameraAngle.srv
-#    lightDensity0to10.srv
-#    resetekf.srv
-#    saveGraph.srv
-#)
 
-#add_service_files(DIRECTORY srv FILES AddTwoInts.srv)
-
-#generate_dynamic_reconfigure_options(
-#    cfg/controllerDynamicConfig.cfg
-#    cfg/ekfParameter.cfg
-#)
-
-## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#  DEPENDENCIES
-#  std_msgs  # Or other packages containing msgs
-#)
-
-#catkin_package(
-#    INCLUDE_DIRS
-#    CATKIN_DEPENDS message_runtime
-##  DEPENDS system_lib
-#)
-
-#include_directories(
-#
-#        ${catkin_INCLUDE_DIRS}
-#        ${QWT_INCLUDE_DIR}
-#        ${OpenCV_INCLUDE_DIRS}
-#)
+ament_package()
 
 
-#add_executable(laserScansToPCL src/laserScan2PointCloud.cpp)
-#target_link_libraries(laserScansToPCL ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
-#
-#add_executable(conversionenutofrd src/conversionENUtoFRD.cpp)
-#target_link_libraries(conversionenutofrd ${catkin_LIBRARIES} Eigen3::Eigen)
-#
-#add_executable(mavrosHeightCalculation src/heightPublisherFromMavros.cpp)
-#target_link_libraries(mavrosHeightCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
-#
-#add_executable(guibluerov2 src/gui/guiBlueROV2.cpp src/gui/mainwindow.h src/gui/mainwindow.cpp src/gui/rosHandlerGui.cpp src/gui/rosHandlerGui.h src/gui/qcustomplot.h src/gui/qcustomplot.cpp)
-#target_link_libraries(guibluerov2 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport Qt5::Gamepad Eigen3::Eigen ${catkin_LIBRARIES} ${OpenCV_LIBS})
-#
-#add_executable(controllerbluerov2 src/controller/controllerOfBluerov2.h src/controllerOfBluerov2.cpp src/controller/controllerRosNode.cpp)
-#target_link_libraries(controllerbluerov2 ${catkin_LIBRARIES} Eigen3::Eigen )
-#add_dependencies(controllerbluerov2 bluerov2common_gencfg )
-
-
-#add_executable(EKFDVL src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/generalTools/generalHelpfulTools.h src/generalTools/generalHelpfulTools.cpp)
-#target_link_libraries(EKFDVL Eigen3::Eigen  ${catkin_LIBRARIES})
-
-#add_executable(randomTest src/randomTestFile.cpp src/generalTools/generalHelpfulTools.h src/generalTools/generalHelpfulTools.cpp)
-#target_link_libraries(randomTest Eigen3::Eigen  ${catkin_LIBRARIES})
-#add_executable(justChristmasPresentCalculation src/randomTestFOrWeihnachtsgeschenk.cpp )
-#target_link_libraries(justChristmasPresentCalculation ${catkin_LIBRARIES} Eigen3::Eigen)
