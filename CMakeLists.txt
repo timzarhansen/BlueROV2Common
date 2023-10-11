@@ -29,21 +29,39 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(commonbluerovmsg REQUIRED)
+find_package(px4_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(waterlinked_a50 REQUIRED)
 
+
+
+############## LIBRARYS ##############
 add_library(generalhelpfullib SHARED src/generalTools/generalHelpfulTools.cpp)
 target_include_directories(generalhelpfullib PUBLIC  src/generalTools)
 ament_target_dependencies(generalhelpfullib tf2 Eigen3)
 
 
 
-add_executable(ekfNode src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h  )
-ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg)
+############## Executables ##############
 
+add_executable(ekfNode src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h  )
+ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg waterlinked_a50)
 target_link_libraries(ekfNode generalhelpfullib )
 
-add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )
-ament_target_dependencies(testFile rclcpp std_msgs sensor_msgs commonbluerovmsg)
-target_link_libraries(testFile generalhelpfullib )
+
+#add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )
+#ament_target_dependencies(testFile rclcpp std_msgs sensor_msgs commonbluerovmsg)
+#target_link_libraries(testFile generalhelpfullib )
+
+
+add_executable(controllerbluerov2 src/controller/controllerOfBluerov2.h src/controllerOfBluerov2.cpp src/controller/controllerRosNode.cpp)
+ament_target_dependencies(controllerbluerov2 rclcpp std_msgs sensor_msgs commonbluerovmsg tf2 Eigen3 px4_msgs visualization_msgs)
+
+
+
+
+
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

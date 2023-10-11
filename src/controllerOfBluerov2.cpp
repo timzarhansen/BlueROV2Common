@@ -4,10 +4,10 @@
 
 #include "controller/controllerOfBluerov2.h"
 
-void controllerOfBluerov2::callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level) {
-    this->setControllerValues(config.height_i, config.height_d, config.height_p, config.hold_position_p,
-                              config.hold_position_i, config.hold_position_d);
-}
+//void controllerOfBluerov2::callbackReconfiguration(bluerov2common::msg::controllerConfig &config, uint32_t level) {
+//    this->setControllerValues(config.height_i, config.height_d, config.height_p, config.hold_position_p,
+//                              config.hold_position_i, config.hold_position_d);
+//}
 
 
 double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP) {
@@ -82,20 +82,27 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
                                                                                               this->holdYaw);
 
 
-        mavros_msgs::AttitudeTarget msg;
-        msg.header.stamp = ros::Time::now();
-        msg.orientation.w = rotationSend.w();
-        msg.orientation.x = rotationSend.x();
-        msg.orientation.y = rotationSend.y();
-        msg.orientation.z = rotationSend.z();
-        msg.body_rate.x = thrustVec(0);
-        msg.body_rate.y = thrustVec(1);
-        msg.body_rate.z = thrustVec(2);
-        msg.thrust = 0.1;//this is unused but should be non zero
-        //changing the coordinate system
-        msg.body_rate.y = -msg.body_rate.y;
-        msg.body_rate.z = -msg.body_rate.z;
-        this->publisherMavros.publish(msg);
+        px4_msgs::msg::VehicleAttitudeSetpoint msg;
+        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds();
+        msg.thrust_body[0] = thrustVec(0);
+        msg.thrust_body[1] = thrustVec(1);
+        msg.thrust_body[2] = thrustVec(2);
+        msg.roll_body = this->holdRoll;
+        msg.pitch_body = this->holdPitch;
+        msg.yaw_body = this->holdYaw;
+
+//        msg.orientation.w = rotationSend.w();
+//        msg.orientation.x = rotationSend.x();
+//        msg.orientation.y = rotationSend.y();
+//        msg.orientation.z = rotationSend.z();
+//        msg.body_rate.x = thrustVec(0);
+//        msg.body_rate.y = thrustVec(1);
+//        msg.body_rate.z = thrustVec(2);
+//        msg.thrust = 0.1;//this is unused but should be non zero
+//        //changing the coordinate system
+//        msg.body_rate.y = -msg.body_rate.y;
+//        msg.body_rate.z = -msg.body_rate.z;
+        this->publisherPX4->publish(msg);
 
 
     } else {//not holding position
@@ -113,21 +120,29 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
                                                                                               this->desiredPitch,
                                                                                               this->desiredYaw);
 
+        px4_msgs::msg::VehicleAttitudeSetpoint msg;
+        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds();
+        msg.thrust_body[0] = thrustVec(0);
+        msg.thrust_body[1] = thrustVec(1);
+        msg.thrust_body[2] = thrustVec(2);
+        msg.roll_body = this->desiredRoll;
+        msg.pitch_body = this->desiredPitch;
+        msg.yaw_body = this->desiredYaw;
 
-        mavros_msgs::AttitudeTarget msg;
-        msg.header.stamp = ros::Time::now();
-        msg.orientation.w = rotationSend.w();
-        msg.orientation.x = rotationSend.x();
-        msg.orientation.y = rotationSend.y();
-        msg.orientation.z = rotationSend.z();
-        msg.body_rate.x = thrustVec(0);
-        msg.body_rate.y = thrustVec(1);
-        msg.body_rate.z = thrustVec(2);
-        msg.thrust = 0.1;//this is unused but should be non zero
-        //changing the coordinate system
-        msg.body_rate.y = -msg.body_rate.y;
-        msg.body_rate.z = -msg.body_rate.z;
-        this->publisherMavros.publish(msg);
+//        mavros_msgs::AttitudeTarget msg;
+//        msg.header.stamp = rclcpp::Time::now();
+//        msg.orientation.w = rotationSend.w();
+//        msg.orientation.x = rotationSend.x();
+//        msg.orientation.y = rotationSend.y();
+//        msg.orientation.z = rotationSend.z();
+//        msg.body_rate.x = thrustVec(0);
+//        msg.body_rate.y = thrustVec(1);
+//        msg.body_rate.z = thrustVec(2);
+//        msg.thrust = 0.1;//this is unused but should be non zero
+//        //changing the coordinate system
+//        msg.body_rate.y = -msg.body_rate.y;
+//        msg.body_rate.z = -msg.body_rate.z;
+        this->publisherPX4->publish(msg);
     }
 
     return returnThrust;
@@ -172,15 +187,15 @@ Eigen::Vector3d controllerOfBluerov2::getThrustForMavros(double thrust_1, double
     return tmpVec;
 }
 
-void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg) {
-    this->desiredDepth = msg->desiredHeight;
-    this->desiredYaw = msg->desiredYaw;
-    this->desiredXThrustBody = msg->desiredXThrust;
-    this->desiredYThrustBody = msg->desiredYThrust;
-    this->desiredRoll = msg->desiredRoll;
-    this->desiredPitch = msg->desiredPitch;
+void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::msg::DesiredStateForRobot::SharedPtr msg) {
+    this->desiredDepth = msg->desired_height;
+    this->desiredYaw = msg->desired_yaw;
+    this->desiredXThrustBody = msg->desired_x_thrust;
+    this->desiredYThrustBody = msg->desired_y_thrust;
+    this->desiredRoll = msg->desired_roll;
+    this->desiredPitch = msg->desired_pitch;
     bool tmpBool = this->holdPosition;
-    this->holdPosition = msg->holdPosition;
+    this->holdPosition = msg->hold_position;
     //if hold positions toggled
     if (this->holdPosition != tmpBool && this->holdPosition) {
         this->integratorX = 0;
@@ -211,7 +226,7 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::desiredS
     }
 }
 
-void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
+void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg) {
     this->currentXVel = msg->twist.twist.linear.x;
     this->currentYVel = msg->twist.twist.linear.y;
     this->currentDepthVel = msg->twist.twist.linear.z;
@@ -220,7 +235,7 @@ void controllerOfBluerov2::currentTwistCallback(const geometry_msgs::TwistWithCo
     this->currentYawVel = msg->twist.twist.angular.z;
 }
 
-void controllerOfBluerov2::currentPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg) {
+void controllerOfBluerov2::currentPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
     this->currentXPosition = msg->pose.pose.position.x;
     this->currentYPosition = msg->pose.pose.position.y;
     this->currentDepth = msg->pose.pose.position.z;
@@ -244,6 +259,64 @@ void controllerOfBluerov2::getPoseTarget(Eigen::Vector3d &position, Eigen::Quate
     position.y() = this->holdYPosition;
     position.z() = this->holdDepth;
     rotation = getQuaternionFromRPY(this->holdRoll,this->holdPitch,this->holdYaw);
+}
+
+void controllerOfBluerov2::timer_callback(){
+    Eigen::Vector3d thrustVector = this->controllLogic();
+
+    visualization_msgs::msg::Marker marker;
+    marker.header.frame_id = "map_ned";
+    marker.header.stamp = rclcpp::Time();
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::ARROW;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+
+    Eigen::Vector3d position;
+    Eigen::Quaterniond rotation;
+    this->getPoseRobot(position,rotation);
+    geometry_msgs::msg::Point p;
+    p.x=position.x();
+    p.y=position.y();
+    p.z=position.z();
+    marker.points.push_back(p);
+    p.x=position.x()+thrustVector.x();
+    p.y=position.y()+thrustVector.y();
+    p.z=position.z()+thrustVector.z();
+    marker.points.push_back(p);
+
+
+    marker.scale.x = 0.06;
+    marker.scale.y = 0.06;
+    marker.scale.z = 0.06;
+    marker.color.a = 1.0; // Don't forget to set the alpha!
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    this->publisherVisualization->publish(marker);
+
+    this->getPoseTarget(position,rotation);
+    marker.header.frame_id = "map_ned";
+    marker.header.stamp = rclcpp::Time();
+    marker.id = 1;
+    marker.type = visualization_msgs::msg::Marker::SPHERE;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+
+
+    marker.pose.position.x=position.x();
+    marker.pose.position.y=position.y();
+    marker.pose.position.z=position.z();
+    marker.pose.orientation.w =1;
+
+
+    marker.scale.x = 0.06;
+    marker.scale.y = 0.06;
+    marker.scale.z = 0.06;
+    marker.color.a = 0.8; // Don't forget to set the alpha!
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    this->publisherVisualization->publish(marker);
+
 }
 
 

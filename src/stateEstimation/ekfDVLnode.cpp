@@ -5,8 +5,9 @@
 #include "rclcpp/rclcpp.hpp"
 
 // just for tricking compiler
-#include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
-
+//#include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
+#include "waterlinked_a50/msg/transducer_report_stamped.hpp"
+#include "waterlinked_a50/msg/position_report_stamped.hpp"
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
@@ -54,8 +55,8 @@ public:
                                                                                std::bind(&RosClassEKF::imuCallback,
                                                                                          this, std::placeholders::_1));
         std::cout << "test DVL:" << std::endl;
-//        this->subscriberDVL = this->create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
-//                "dvl/transducer_report", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
+        this->subscriberDVL = this->create_subscription<waterlinked_a50::msg::TransducerReportStamped>(
+                "dvl/transducer_report", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
 
 
         this->subscriberDepth = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
@@ -92,7 +93,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriberIMU;
     rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepth;
     rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr subscriberHeading;
-    rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr subscriberDVL;
+    rclcpp::Subscription<waterlinked_a50::msg::TransducerReportStamped>::SharedPtr subscriberDVL;
 
 
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publisherPoseEkf;
@@ -105,7 +106,7 @@ private:
     int currentInputIMU;
 
 
-    void imuCallbackHelper(const sensor_msgs::msg::Imu::SharedPtr &msg) {
+    void imuCallbackHelper(const sensor_msgs::msg::Imu::SharedPtr msg) {
         Eigen::Quaterniond tmpRot;
         tmpRot.x() = msg.get()->orientation.x;
         tmpRot.y() = msg.get()->orientation.y;
@@ -158,43 +159,43 @@ private:
         this->updateSlamMutex.unlock();
     }
 
-    void DVLCallbackDVLHelper(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr &msg) {
-//        if (!msg->report.velocity_valid || msg->report.status != 0) {
-//            //if we dont know anything, the ekf should just go to 0, else the IMU gives direction.
-//            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, this->positionDVL, msg->header.stamp);
-//        } else {
-//            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,
-//                                       this->positionDVL,
-//                                       msg->header.stamp);
-//        }
+    void DVLCallbackDVLHelper(const waterlinked_a50::msg::TransducerReportStamped::SharedPtr msg) {
+        if (!msg->report.velocity_valid || msg->report.status != 0) {
+            //if we don't know anything, the ekf should just go to 0, else the IMU gives direction.
+            this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, this->positionDVL, rclcpp::Time(msg->timestamp));
+        } else {
+            this->currentEkf.updateDVL(msg->report.vx, msg->report.vy, msg->report.vz, this->rotationOfDVL,
+                                       this->positionDVL,
+                                       rclcpp::Time(msg->timestamp));
+        }
         return;
     }
 
-    void DVLCallbackDVL(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr &msg) {
+    void DVLCallbackDVL(const waterlinked_a50::msg::TransducerReportStamped::SharedPtr msg) {
         this->updateSlamMutex.lock();
         this->DVLCallbackDVLHelper(msg);
         this->updateSlamMutex.unlock();
     }
 
-    void DVLCallbackSimulationHelper(const geometry_msgs::msg::Vector3Stamped::SharedPtr &msg) {
+    void DVLCallbackSimulationHelper(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg) {
         this->currentEkf.updateDVL(msg->vector.x, msg->vector.y, msg->vector.z, Eigen::Quaterniond(1, 0, 0, 0),
                                    this->positionDVL,
                                    msg->header.stamp);
     }
 
-    void DVLCallbackSimulation(const geometry_msgs::msg::Vector3Stamped::SharedPtr &msg) {
+    void DVLCallbackSimulation(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg) {
         this->updateSlamMutex.lock();
         this->DVLCallbackSimulationHelper(msg);
         this->updateSlamMutex.unlock();
     }
 
-    void DVLCallbackMavrosHelper(const geometry_msgs::msg::TwistStamped::SharedPtr &msg) {
+    void DVLCallbackMavrosHelper(const geometry_msgs::msg::TwistStamped::SharedPtr msg) {
         this->currentEkf.updateDVL(msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z,
                                    Eigen::Quaterniond(1, 0, 0, 0), this->positionDVL,
                                    msg->header.stamp);
     }
 
-    void DVLCallbackMavros(const geometry_msgs::msg::TwistStamped::SharedPtr &msg) {
+    void DVLCallbackMavros(const geometry_msgs::msg::TwistStamped::SharedPtr msg) {
         this->updateSlamMutex.lock();
         this->DVLCallbackMavrosHelper(msg);
         this->updateSlamMutex.unlock();

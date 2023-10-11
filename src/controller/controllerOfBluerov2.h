@@ -1,33 +1,51 @@
 //
 // Created by tim-linux on 22.12.21.
 //
-#include <ros/ros.h>
-#include "commonbluerovmsg/desiredStateForRobot.h"
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "geometry_msgs/TwistWithCovarianceStamped.h"
-#include "mavros_msgs/AttitudeTarget.h"
+#include "rclcpp/rclcpp.hpp"
+#include <chrono>
+#include "commonbluerovmsg/msg/desired_state_for_robot.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include <visualization_msgs/msg/marker.hpp>
+//#include "mavros_msgs/AttitudeTarget.h"
+#include "px4_msgs/msg/vehicle_attitude_setpoint.hpp"
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
-#include <bluerov2common/controllerConfig.h>
-#include <dynamic_reconfigure/server.h>
+//#include <bluerov2common/controllerConfig.h>
+//#include <dynamic_reconfigure/server.h>
 
 #ifndef BLUEROV2COMMON_CONTROLLEROFBLUEROV2_H
 #define BLUEROV2COMMON_CONTROLLEROFBLUEROV2_H
 
 
-class controllerOfBluerov2 {
-public:
-    controllerOfBluerov2(ros::NodeHandle n_) {
-        subscriberDesiredState = n_.subscribe("desiredStateOfBluerov2", 1000,
-                                              &controllerOfBluerov2::desiredStateCallback, this);
-        subscriberCurrentPose = n_.subscribe("publisherPoseEkf", 1000, &controllerOfBluerov2::currentPoseCallback,
-                                             this);
-        subscriberCurrentTwist = n_.subscribe("publisherTwistEkf", 1000, &controllerOfBluerov2::currentTwistCallback,
-                                              this);
 
-        publisherMavros = n_.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 10);
+class controllerOfBluerov2 : public rclcpp::Node {
+public:
+    controllerOfBluerov2() : Node("controllerBlueROV") {
+        rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
+
+
+        this->subscriberDesiredState = this->create_subscription<commonbluerovmsg::msg::DesiredStateForRobot>(
+                "desiredStateOfBluerov2", qos,
+                std::bind(&controllerOfBluerov2::desiredStateCallback, this, std::placeholders::_1));
+        this->subscriberCurrentPose = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+                "publisherPoseEkf", qos, std::bind(&controllerOfBluerov2::currentPoseCallback,
+                this,std::placeholders::_1));
+        this->subscriberCurrentTwist = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+                "publisherTwistEkf", qos, std::bind(&controllerOfBluerov2::currentTwistCallback,
+                this,std::placeholders::_1));
+
+        this->publisherPX4 = this->create_publisher<px4_msgs::msg::VehicleAttitudeSetpoint>(
+                "/fmu/in/vehicle_attitude_setpoint", qos);
+
+        this->publisherVisualization = this->create_publisher<visualization_msgs::msg::Marker>(
+                "controllerThrustVisualization", qos);
+        std::chrono::duration<double> my_timer_duration = std::chrono::duration<double>(1.0 / 30.0);
+        this->timer_ = this->create_wall_timer(
+                my_timer_duration, std::bind(&controllerOfBluerov2::timer_callback, this));
+
         this->integratorHeight = 0;
         this->integratorX = 0;
         this->integratorY = 0;
@@ -58,15 +76,25 @@ public:
     void setControllerValues(double height_i_tmp, double height_d_tmp, double height_p_tmp, double hold_position_p_tmp,
                              double hold_position_i_tmp, double hold_position_d_tmp);
 
-    void callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level);
+//    void callbackReconfiguration(bluerov2common::controllerConfig &config, uint32_t level);
 
-    void getPoseRobot( Eigen::Vector3d &position, Eigen::Quaterniond &rotation);
+    void getPoseRobot(Eigen::Vector3d &position, Eigen::Quaterniond &rotation);
 
     void getPoseTarget(Eigen::Vector3d &position, Eigen::Quaterniond &rotation);
 
+    void timer_callback();
+
 private:
-    ros::Subscriber subscriberDesiredState, subscriberCurrentPose, subscriberCurrentTwist;
-    ros::Publisher publisherMavros;
+    rclcpp::Subscription<commonbluerovmsg::msg::DesiredStateForRobot>::SharedPtr subscriberDesiredState;
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscriberCurrentPose;
+    rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr subscriberCurrentTwist;
+
+    rclcpp::Publisher<px4_msgs::msg::VehicleAttitudeSetpoint>::SharedPtr publisherPX4;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisherVisualization;
+
+
+    rclcpp::TimerBase::SharedPtr timer_;
+
     //Pose
     std::atomic<double> currentXPosition, currentYPosition, currentDepth, currentRoll, currentPitch, currentYaw;
     //Twist
@@ -79,17 +107,17 @@ private:
     //StateToHold:
     std::atomic<double> holdXPosition, holdYPosition, holdDepth, holdRoll, holdPitch, holdYaw;
     //for Control:
-    std::atomic<double> integratorHeight,integratorX,integratorY;
+    std::atomic<double> integratorHeight, integratorX, integratorY;
     // control parameter
     std::atomic<double> height_i, height_d, height_p, hold_position_p, hold_position_i, hold_position_d;
 
 
     //functions
-    void desiredStateCallback(const commonbluerovmsg::desiredStateForRobot::ConstPtr &msg);
+    void desiredStateCallback(const commonbluerovmsg::msg::DesiredStateForRobot::SharedPtr msg);
 
-    void currentTwistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg);
+    void currentTwistCallback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
 
-    void currentPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
+    void currentPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
 
 };
