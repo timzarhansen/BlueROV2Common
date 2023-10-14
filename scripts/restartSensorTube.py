@@ -1,59 +1,62 @@
 #!/usr/bin/env python3
-
+import sys
+import commonbluerovmsg.srv
 from commonbluerovmsg.srv import *
-import rospy
+# import rospy
 # import RPi.GPIO as GPIO
 import pigpio
 import time
+import rclpy
+from rclpy.node import Node
 
 
-class pwmClass:
-    sonarPin = 20
-    #localPiGPIO = None
+class pwmClass(Node):
+    resetPin = 20
+    # localPiGPIO = None
     gpioPinSonar = None
 
-    def initGPIOPins(self):
-        #GPIO.setmode(GPIO.BCM)
+    def __init__(self):
+        super().__init__("reset_sensor_tube")
+        # GPIO.setmode(GPIO.BCM)
 
-        #GPIO.setup(self.LEDPin, GPIO.OUT)  # light Pin
-        #self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
-        #self.gpioPinLight.start(0)
+        # GPIO.setup(self.LEDPin, GPIO.OUT)  # light Pin
+        # self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
+        # self.gpioPinLight.start(0)
         self.gpioPinSonar = pigpio.pi()
-        self.gpioPinSonar.set_mode(self.sonarPin, pigpio.OUTPUT)
-        self.gpioPinSonar.write(self.sonarPin,0)
-        #self.gpioPinSonar.hardware_PWM(self.sonarPin, 50, 0)#10000
+        self.gpioPinSonar.set_mode(self.resetPin, pigpio.OUTPUT)
+        self.gpioPinSonar.write(self.resetPin, 0)
+        # self.gpioPinSonar.hardware_PWM(self.sonarPin, 50, 0)#10000
+        s = self.create_service(commonbluerovmsg.srv.RestartSonarService, 'reset_sonar', self.handleSonar)
 
-    def handleSonar(self, req):
+    def handleSonar(self, req, res):
         # start restart Sonar
 
-        self.gpioPinSonar.write(self.sonarPin,1)
+        self.gpioPinSonar.write(self.resetPin, 1)
 
-        time.sleep(req.timeUntilRestart)
-        self.gpioPinSonar.write(self.sonarPin,0)
-
-
-        return restartSonarServiceResponse(True)
-
-    def resetSonarSensorServer(self):
-        s = rospy.Service('reset_sonar', restartSonarService, self.handleSonar)
-
-    def shutdownHook(self):
-        #self.gpioPinLight.stop()
-        print("shutdown")
-        #self.gpioPinServo.stop()
-        #GPIO.cleanup()
+        time.sleep(req.time_until_restart)
+        self.gpioPinSonar.write(self.resetPin, 0)
+        # res = commonbluerovmsg.srv.RestartSonarService.Response
+        res.saved = True
+        return res
+    # def shutdownHook(self):
+    #     #self.gpioPinLight.stop()
+    #     print("shutdown")
+    #     #self.gpioPinServo.stop()
+    #     #GPIO.cleanup()
 
 
 if __name__ == "__main__":
+
+    rclpy.init(args=sys.argv)
+
     try:
         myPwmClass = pwmClass()
-        myPwmClass.initGPIOPins()
-        rospy.init_node('pwmSignalServer')
-
-        myPwmClass.resetSonarSensorServer()
-
-        rospy.on_shutdown(myPwmClass.shutdownHook)
-
-        rospy.spin()
+        # myPwmClass.initGPIOPins()
+        rclpy.spin(myPwmClass)
+        # myPwmClass.resetSonarSensorServer()
+        rclpy.shutdown()
+        # rospy.on_shutdown(myPwmClass.shutdownHook)
+        #
+        # rospy.spin()
     except:
         pass

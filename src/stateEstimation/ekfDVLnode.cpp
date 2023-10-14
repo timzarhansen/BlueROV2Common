@@ -21,8 +21,8 @@
 #include "geometry_msgs/msg/vector3_stamped.hpp"
 //#include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-
-
+#include "px4_msgs/msg/sensor_baro.hpp"
+#include "px4_msgs/msg/vehicle_air_data.hpp"
 
 //#include "../slamTools/generalHelpfulTools.h"
 //#include "waterlinked_dvl/TransducerReportStamped.h"
@@ -33,7 +33,7 @@
 //#include "bluerov2common/ekfParameterConfig.h"
 //#include <dynamic_reconfigure/server.h>
 #include <commonbluerovmsg/msg/state_of_blue_rov.hpp>
-
+static constexpr double CONSTANTS_ONE_G = 9.80665;
 class RosClassEKF : public rclcpp::Node {
 public:
     RosClassEKF() : Node("ekfStateEstimation"), currentEkf(rclcpp::Clock(RCL_ROS_TIME).now()) {
@@ -59,11 +59,24 @@ public:
                 "dvl/transducer_report", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
 
 
-        this->subscriberDepth = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
-                                                                                                std::bind(
+        this->subscriberDepthOwnTopic = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
+                                                                                                        std::bind(
                                                                                                         &RosClassEKF::depthSensorCallback,
                                                                                                         this,
                                                                                                         std::placeholders::_1));
+
+        this->subscriberDepthSensorBaroPX4 = this->create_subscription<px4_msgs::msg::SensorBaro>("/fmu/out/sensor_baro", qos,
+                                                                                                        std::bind(
+                                                                                                        &RosClassEKF::depthSensorBaroPX4,
+                                                                                                        this,
+                                                                                                        std::placeholders::_1));
+        this->subscriberDepthSensorVehicleAirData = this->create_subscription<px4_msgs::msg::VehicleAirData>("/fmu/out/vehicle_air_data", qos,
+                                                                                                  std::bind(
+                                                                                                          &RosClassEKF::depthSensorVehicleAir,
+                                                                                                          this,
+                                                                                                          std::placeholders::_1));
+
+
         this->subscriberHeading = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("magnetic_heading", qos,
                                                                                                 std::bind(
                                                                                                         &RosClassEKF::headingCallback,
@@ -91,7 +104,9 @@ private:
     ekfClassDVL currentEkf;
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriberIMU;
-    rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepth;
+    rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepthOwnTopic;
+    rclcpp::Subscription<px4_msgs::msg::SensorBaro>::SharedPtr subscriberDepthSensorBaroPX4;
+    rclcpp::Subscription<px4_msgs::msg::VehicleAirData>::SharedPtr subscriberDepthSensorVehicleAirData;
     rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr subscriberHeading;
     rclcpp::Subscription<waterlinked_a50::msg::TransducerReportStamped>::SharedPtr subscriberDVL;
 
@@ -104,7 +119,8 @@ private:
     rclcpp::Service<commonbluerovmsg::srv::ResetEkf>::SharedPtr serviceResetEkf;
     int currentInputDVL;
     int currentInputIMU;
-
+    double pressureWhenStarted;
+    bool firstMessage;
 
     void imuCallbackHelper(const sensor_msgs::msg::Imu::SharedPtr msg) {
         Eigen::Quaterniond tmpRot;
@@ -213,6 +229,33 @@ private:
     void depthSensorCallback(const commonbluerovmsg::msg::HeightStamped::SharedPtr msg) {
         this->updateSlamMutex.lock();
         this->depthSensorHelper(msg);
+        this->updateSlamMutex.unlock();
+    }
+    void depthSensorBaroPX4(const px4_msgs::msg::SensorBaro::SharedPtr msg) {
+        if(this->firstMessage){
+            this->pressureWhenStarted = msg->pressure;
+            this->firstMessage = false;
+            return;
+        }
+        commonbluerovmsg::msg::HeightStamped::SharedPtr newMsg;
+        newMsg->timestamp = msg->timestamp;
+        newMsg->height = ((msg->pressure-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);
+        this->updateSlamMutex.lock();
+        this->depthSensorHelper(newMsg);
+        this->updateSlamMutex.unlock();
+    }
+    void depthSensorVehicleAir(const px4_msgs::msg::VehicleAirData::SharedPtr msg) {
+        if(this->firstMessage){
+            this->pressureWhenStarted = msg->baro_pressure_pa;
+            this->firstMessage = false;
+            return;
+        }
+        commonbluerovmsg::msg::HeightStamped::SharedPtr newMsg;
+        newMsg->timestamp = msg->timestamp;
+        newMsg->height = ((msg->baro_pressure_pa-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);
+
+        this->updateSlamMutex.lock();
+        this->depthSensorHelper(newMsg);
         this->updateSlamMutex.unlock();
     }
 

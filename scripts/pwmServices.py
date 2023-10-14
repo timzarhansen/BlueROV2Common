@@ -20,10 +20,21 @@ class PWMSignalServer(Node):
 
     def __init__(self):
         super().__init__('pwm_signal_server')
-        self.startLightLEDServer()
-        self.startServoCameraServer()
+        # print("test1")
+        self.initGPIOPins()
+        timer_period = 2
+        # print("test2")
+        self.timer = self.create_timer(timer_period, self.controllerAngleServo)
+        # print("test3")
+        self.srvLight = self.create_service(LightDensity, 'light_service', self.handleLight)
+        # print("test4")
+        self.srvCamera = self.create_service(CameraAngle, 'camera_angle_service', self.handleAngleServo)
+        # print("test5")
 
-    # GPIO pin init
+
+
+
+# GPIO pin init
     def initGPIOPins(self):
 
         self.gpioPinLight = pigpio.pi()
@@ -33,18 +44,23 @@ class PWMSignalServer(Node):
         self.gpioPinServo.set_mode(self.servoPin, pigpio.OUTPUT)
         self.gpioPinServo.hardware_PWM(self.servoPin, 50, 0)  # 10000
 
-    def handleLight(self, req):
+    def handleLight(self, req, res):
         # start correct lightning
+        print("starting handle light")
         self.gpioPinLight.hardware_PWM(self.LEDPin, 50, req.intensity * 10000)  # 10000
+        print("done")
         res = True
         return res
 
-    def handleAngleServo(self, req):
+    def handleAngleServo(self, req, res):
+        print("starting handle servo")
         self.angleDesired = req.angle
-        res = True
+        print("done")
+        res.worked = True
         return res
 
     def controllerAngleServo(self):
+        print("control loop")
         if self.angleDesired == self.angleCurrent:
             return
         tmpAngleDes = 0
@@ -59,85 +75,12 @@ class PWMSignalServer(Node):
         self.gpioPinLight.hardware_PWM(self.servoPin, 50, int(duty * 10000))  # 10000
         self.angleCurrent = tmpAngleDes
 
-    def startLightLEDServer(self):
-        srv = self.create_service(LightDensity, 'light_service', self.handleLight)
+    # def shutdownHook(self):
+    #      #self.gpioPinLight.stop()
+    #      print("shutdown")
+    #      #self.gpioPinServo.stop()
+    #      #GPIO.cleanup()
 
-    def startServoCameraServer(self):
-        srv = self.create_service(CameraAngle, 'camera_angle_service', self.handleAngleServo)
-
-    def shutdownHook(self):
-         #self.gpioPinLight.stop()
-         print("shutdown")
-         #self.gpioPinServo.stop()
-         #GPIO.cleanup()
-
-
-#
-# class PwmClass:
-#     servoPin = 12
-#     LEDPin = 13
-#     # localPiGPIO = None
-#     gpioPinServo = None
-#     gpioPinLight = None
-#     angleDesired = 90
-#     angleCurrent = 90
-#     def initGPIOPins(self):
-#         # GPIO.setmode(GPIO.BCM)
-#
-#         # GPIO.setup(slightDensity0to10Responseelf.LEDPin, GPIO.OUT)  # light Pin
-#         # self.gpioPinLight = GPIO.PWM(self.LEDPin, 50)  # frequency=50Hz
-#         # self.gpioPinLight.start(0)
-#         self.gpioPinLight = pigpio.pi()
-#         self.gpioPinLight.set_mode(self.LEDPin,pigpio.OUTPUT)
-#         self.gpioPinLight.hardware_PWM(self.LEDPin,50,0)#10000
-#
-#         self.gpioPinServo = pigpio.pi()
-#         self.gpioPinServo.set_mode(self.servoPin,pigpio.OUTPUT)
-#         self.gpioPinServo.hardware_PWM(self.servoPin,50,0)#10000
-#
-#
-#     def handleLight(self, req):
-#         # start correct lightning
-#         # self.gpioPinLight.ChangeDutyCycle(5.0 + req.intensity / 2.5)
-#         self.gpioPinLight.hardware_PWM(self.LEDPin,50,req.intensity*10000)#10000
-#         return LightDensityResponse(True)
-#
-#
-#     def handleAngleServo(self, req):
-#
-#         self.angleDesired = req.angle
-#         return CameraAngleResponse(True)
-#
-#
-#     def controllerAngleServo(self):
-#         if self.angleDesired == self.angleCurrent:
-#             return
-#         tmpAngleDes = 0
-#         if abs(self.angleDesired-self.angleCurrent)>1:
-#             if self.angleDesired-self.angleCurrent >0:
-#                 tmpAngleDes = self.angleCurrent+2
-#             else:
-#                 tmpAngleDes = self.angleCurrent-2
-#         else:
-#             tmpAngleDes = self.angleDesired
-#         duty = ((tmpAngleDes / 180)*108 +71)/180*10
-#         self.gpioPinLight.hardware_PWM(self.servoPin,50,int(duty*10000))#10000
-#         self.angleCurrent = tmpAngleDes
-#
-#
-#     def startLightLEDServer(self):
-#         s = rospy.Service('set_light_of_leds_0_to_10', lightDensity0to10, self.handleLight)
-#
-#
-#     def startServoCameraServer(self):
-#         s = rospy.Service('set_angle_of_camera_0_to_180', cameraAngle, self.handleAngleServo)
-#
-#
-#     def shutdownHook(self):
-#         #self.gpioPinLight.stop()
-#         print("shutdown")
-#         #self.gpioPinServo.stop()
-#         #GPIO.cleanup()
 
 
 if __name__ == "__main__":
@@ -145,14 +88,10 @@ if __name__ == "__main__":
     rclpy.init(args=sys.argv)
     try:
         pwm_server = PWMSignalServer()
-        pwm_server.initGPIOPins()
-        rate = pwm_server.create_rate(2)
-
-        # Not sure on shutdown hook in ROS2, found this: https://github.com/mikeferguson/ros2_cookbook/blob/main/rclpy/nodes.md
-
-        while rclpy.ok():
-            pwm_server.controllerAngleServo()
-            rate.sleep()
+        # pwm_server.initGPIOPins()
+        rclpy.spin(pwm_server)
+        # leak_publisher.destroy_node()
+        rclpy.shutdown()
 
 
         # myPwmClass = PwmClass()

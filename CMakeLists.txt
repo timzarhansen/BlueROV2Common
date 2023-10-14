@@ -37,21 +37,22 @@ find_package(commonbluerovmsg REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(waterlinked_a50 REQUIRED)
-
+find_package(ping360_sonar_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
 
 
 ############## LIBRARYS ##############
-add_library(generalhelpfullib SHARED src/generalTools/generalHelpfulTools.cpp)
-target_include_directories(generalhelpfullib PUBLIC  src/generalTools)
-ament_target_dependencies(generalhelpfullib tf2 Eigen3)
+#add_library(generalhelpfullib SHARED src/generalTools/generalHelpfulTools.cpp)
+#target_include_directories(generalhelpfullib PUBLIC  src/generalTools)
+#ament_target_dependencies(generalhelpfullib tf2 Eigen3)
 
-
+include_directories(src/generalTools)
 
 ############## Executables ##############
 
-add_executable(ekfNode src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h  )
-ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg waterlinked_a50)
-target_link_libraries(ekfNode generalhelpfullib )
+add_executable(ekfNode src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h src/generalTools/generalHelpfulTools.cpp )
+ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg waterlinked_a50 tf2 Eigen3 px4_msgs)
+target_link_libraries(ekfNode )
 
 
 #add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )
@@ -62,6 +63,8 @@ target_link_libraries(ekfNode generalhelpfullib )
 add_executable(controllerbluerov2 src/controller/controllerOfBluerov2.h src/controllerOfBluerov2.cpp src/controller/controllerRosNode.cpp)
 ament_target_dependencies(controllerbluerov2 rclcpp std_msgs sensor_msgs commonbluerovmsg tf2 Eigen3 px4_msgs visualization_msgs)
 
+add_executable(visualizationSonar src/visualizationSonarImage.cpp)
+ament_target_dependencies(visualizationSonar rclcpp std_msgs sensor_msgs commonbluerovmsg ping360_sonar_msgs cv_bridge)
 
 
 
@@ -77,6 +80,8 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
         scripts/pwmServices.py
         scripts/leakageSensor.py
+        scripts/restartSensorTube.py
+        bashScripts/mavrouteStart.sh
         DESTINATION lib/${PROJECT_NAME}
 )
 
