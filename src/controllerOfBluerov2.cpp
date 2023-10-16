@@ -17,9 +17,17 @@ double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP) {
     if (std::abs(this->integratorHeight + 0.01 * errorInZ) < 0.2) {
         this->integratorHeight = this->integratorHeight + 0.01 * errorInZ;
     }
+    std::cout << "desiredDepthTMP" << std::endl;
+
+    std::cout << desiredDepthTMP << std::endl;
+    std::cout << this->currentDepth << std::endl;
+
+
+
 
     double thrustHeight =
             this->height_p * errorInZ - this->height_d * this->currentDepthVel + this->height_i * this->integratorHeight;//PID values
+    std::cout << thrustHeight << std::endl;
     return thrustHeight;
 
 }

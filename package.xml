@@ -21,6 +21,7 @@
   <depend>visualization_msgs</depend>
   <depend>waterlinked_a50</depend>
   <depend>rclpy</depend>
+  <depend>ping360_sonar_msgs</depend>
   <depend>px4_msgs</depend>
 
   <export>

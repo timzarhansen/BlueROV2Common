@@ -4,19 +4,19 @@
 
 #include "rosHandlerGui.h"
 
-void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar,int frequencyRange,int numberOfSamples) {
-    ping360_sonar::sendingSonarConfig srv;
-    srv.request.range = rangeSonar;
-    srv.request.stepSize = stepSize;
-    srv.request.frequencyRange = frequencyRange;
-    srv.request.numberOfSamples = numberOfSamples;
+//void rosHandlerGui::updateConfigSonar(int stepSize, int rangeSonar,int frequencyRange,int numberOfSamples) {
+//    ping360_sonar::sendingSonarConfig srv;
+//    srv.request.range = rangeSonar;
+//    srv.request.stepSize = stepSize;
+//    srv.request.frequencyRange = frequencyRange;
+//    srv.request.numberOfSamples = numberOfSamples;
+//
+//    clientSonar.call(srv);
+////    std::cout << "changed sonar Config" << std::endl;
+//}
 
-    clientSonar.call(srv);
-//    std::cout << "changed sonar Config" << std::endl;
-}
 
-
-void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg) {
+void rosHandlerGui::positionCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
 //    std::cout << "test1332"<< std::endl;
     this->xPositionRobot.push_back(msg->pose.pose.position.x);
     this->yPositionRobot.push_back(msg->pose.pose.position.y);
@@ -41,7 +41,7 @@ void rosHandlerGui::positionCallback(const geometry_msgs::PoseWithCovarianceStam
 }
 
 
-void rosHandlerGui::DVLCallback(const waterlinked_dvl::TransducerReportStamped::ConstPtr &msg) {
+void rosHandlerGui::DVLCallback(const waterlinked_a50::msg::TransducerReportStamped::SharedPtr msg) {
 
     emit updateDVLStateROS(msg->report.transducers[0].distance, msg->report.transducers[1].distance,
                            msg->report.transducers[2].distance, msg->report.transducers[3].distance);
@@ -49,24 +49,28 @@ void rosHandlerGui::DVLCallback(const waterlinked_dvl::TransducerReportStamped::
 
 
 void rosHandlerGui::updateAngleCamera(int angleCamera) {
-    commonbluerovmsg::cameraAngle srv;
-    srv.request.angle = angleCamera;
-    this->clientCameraAngle.call(srv);
+    auto srv = std::make_shared<commonbluerovmsg::srv::CameraAngle::Request>();
+
+    srv->angle = angleCamera;
+    auto result = this->clientCameraAngle->async_send_request(srv);
 }
 
 void rosHandlerGui::updateLightIntensity(int intensityLight) {
-    commonbluerovmsg::lightDensity0to10 srv;
-    srv.request.intensity = intensityLight;
-    this->clientLight.call(srv);
+    auto srv = std::make_shared<commonbluerovmsg::srv::LightDensity::Request>();
+
+
+    srv->intensity = intensityLight;
+    auto result = this->clientLight->async_send_request(srv);
+
 }
 
-void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {
+void rosHandlerGui::sonarImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
     cv_bridge::CvImagePtr cv_ptr;
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
     }
     catch (cv_bridge::Exception &e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
+        RCLCPP_ERROR(this->get_logger(),"cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -83,13 +87,13 @@ void rosHandlerGui::sonarImageCallback(const sensor_msgs::ImageConstPtr &msg) {
 
 }
 
-void rosHandlerGui::cameraImageCallback(const sensor_msgs::CompressedImagePtr &msg) {
+void rosHandlerGui::cameraImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg) {
     cv_bridge::CvImagePtr cv_ptr;
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     }
     catch (cv_bridge::Exception &e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
+        RCLCPP_ERROR(this->get_logger(),"cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -108,30 +112,30 @@ void rosHandlerGui::updateDesiredState(double desiredHeight, double desiredRoll,
                                        double desiredXMovement, double desiredYMovement, bool holdPosition) {
 
     //this just sends the data to ros, the frame rate is made by mainwindow
-    commonbluerovmsg::desiredStateForRobot msg;
-    msg.header.stamp = ros::Time::now();
-    msg.desiredHeight = desiredHeight;
-    msg.desiredRoll = desiredRoll;
-    msg.desiredPitch = desiredPitch;
-    msg.desiredXThrust = desiredXMovement;
-    msg.desiredYaw = desiredYaw;
-    msg.desiredYThrust = desiredYMovement;
-    msg.holdPosition = holdPosition;
-    publishingDesiredState.publish(msg);
+    commonbluerovmsg::msg::DesiredStateForRobot msg;
+    msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds();;
+    msg.desired_height = desiredHeight;
+    msg.desired_roll = desiredRoll;
+    msg.desired_pitch = desiredPitch;
+    msg.desired_x_thrust = desiredXMovement;
+    msg.desired_yaw = desiredYaw;
+    msg.desired_y_thrust = desiredYMovement;
+    msg.hold_position = holdPosition;
+    publishingDesiredState->publish(msg);
 
 }
 
-void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph) {
-    if (not resetOnlyGraph) {
-        commonbluerovmsg::resetekf srv;
-        srv.request.xPos = 0;
-        srv.request.yPos = 0;
-        srv.request.yaw = 0;
-        srv.request.resetCovariances = true;
-        this->clientEKF.call(srv);
-    }
-
-    this->xPositionRobot.clear();
-    this->yPositionRobot.clear();
-    this->yawPositionRobot.clear();
-}
+//void rosHandlerGui::resetEKFEstimator(bool resetOnlyGraph) {
+//    if (not resetOnlyGraph) {
+//        commonbluerovmsg::resetekf srv;
+//        srv.request.xPos = 0;
+//        srv.request.yPos = 0;
+//        srv.request.yaw = 0;
+//        srv.request.resetCovariances = true;
+//        this->clientEKF.call(srv);
+//    }
+//
+//    this->xPositionRobot.clear();
+//    this->yPositionRobot.clear();
+//    this->yawPositionRobot.clear();
+//}

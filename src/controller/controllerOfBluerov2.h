@@ -58,6 +58,15 @@ public:
         this->desiredRoll = 0;
         this->desiredPitch = 0;
 
+        this->height_i = 0.4;
+        this->height_d = 0.0;
+        this->height_p = 0.9;
+
+        this->hold_position_p = 1.0;
+        this->hold_position_i = 0.1;
+        this->hold_position_d = 4.0;
+
+
         //startControlLogic with outside Thread
     }
 

@@ -45,8 +45,8 @@ public:
         this->currentInputDVL = 0;
         this->currentInputIMU = 0;
 //        this->subscriberDVL.shutdown();
-        this->rotationOfDVL = Eigen::AngleAxisd(0,
-                                                Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data;
+        this->rotationOfDVL = Eigen::AngleAxisd(2.35619449019,
+                                                Eigen::Vector3d::UnitZ());//yaw rotation for correct alignment of DVL data; quick fix set to default
         this->positionIMU = Eigen::Vector3d(0, 0, 0);
         this->positionDVL = Eigen::Vector3d(0, 0, 0);
 
@@ -170,6 +170,9 @@ private:
     }
 
     void imuCallback(const sensor_msgs::msg::Imu::SharedPtr msg) {
+        //change the orientation of the IMU message
+
+
         this->updateSlamMutex.lock();
         this->imuCallbackHelper(msg);
         this->updateSlamMutex.unlock();

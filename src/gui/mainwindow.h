@@ -96,9 +96,10 @@ public:
     void handleResetEKFGraph();
 
     void threadSendCurrentDesiredPoseRobot() {
-        ros::Rate loop_rate(30);
+        rclcpp::Rate loop_rate(30);
+//        ros::Rate loop_rate(30);
 
-        while (ros::ok()) {
+        while (rclcpp::ok()) {
 
 //            this->updateRightX(this->m_gamepad->axisRightX());
 //            this->updateRightY(this->m_gamepad->axisRightY());
@@ -116,7 +117,8 @@ public:
 
             emit this->updateDesiredState(this->desiredHeight, this->desiredRoll, this->desiredPitch, this->desiredYaw,
                                           this->desiredXMovement, this->desiredYMovement, this->holdPositionStatus);
-            ros::spinOnce();
+//            rclcpp::spin();
+//            rclcpp::spin_some();
             loop_rate.sleep();
         }
 
@@ -124,9 +126,11 @@ public:
     }
 
     void threadUpdateCurrentDesiredPoseRobot() {
-        ros::Rate loop_rate(10);
+        rclcpp::Rate loop_rate(10);
 
-        while (ros::ok()) {
+//        ros::Rate loop_rate(10);
+
+        while (rclcpp::ok()) {
 
             this->updateRightX(this->m_gamepad->axisRightX());
             this->updateRightY(this->m_gamepad->axisRightY());
@@ -138,7 +142,7 @@ public:
             this->updateR1Button(this->m_gamepad->buttonR1());
             this->updateR2Button(this->m_gamepad->buttonR2());
 
-            ros::spinOnce();
+//            ros::spinOnce();
             loop_rate.sleep();
         }
 
@@ -576,8 +580,8 @@ private:
 
 public:
     void updateDesiredPosition(){
-
-        ros::Duration(0.2).sleep();
+        rclcpp::sleep_for(std::chrono::seconds(200000000));// should be 0.2 seconds
+//        rclcpp::Duration(0.2).sleep();
         double tmpNumber;
         tmpNumber = this->currentYaw;
         this->desiredYaw = tmpNumber;

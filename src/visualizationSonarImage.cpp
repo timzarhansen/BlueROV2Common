@@ -8,6 +8,7 @@
 
 double rotationOfSonarOnRobot = 200;//maybe in rad
 cv::Mat sonarImage;
+rclcpp::Node::SharedPtr g_node = nullptr;
 rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisherSonarImage;
 double lastAngle = 0;
 std::vector<double> linspace(double start_in, double end_in, int num_in) {
@@ -37,7 +38,7 @@ std::vector<double> linspace(double start_in, double end_in, int num_in) {
     return linspaced;
 }
 
-void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::ConstPtr &msg){
+void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::SharedPtr msg){
 //    std::cout << "msg: " << std::endl;
 //    std::cout << msg->angle << std::endl;
 //    std::cout << msg->number_of_samples << std::endl;
@@ -57,11 +58,11 @@ void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::Const
         if (i<sonarImage.size[0]){
             color = msg->intensities[i * linear_factor - 1];
         }
-        double stepSize = (msg->angle-lastAngle)/M_PI*200;//1;
+        double stepSize = (msg->angle-lastAngle);//1;
         std::vector<double> linspaceVector = linspace(-stepSize/2,stepSize/2,10);
         for(const auto& value: linspaceVector) {
             //minus because of the coordinate change from z to top to z to bottom
-            double theta = 2 * M_PI * (msg->angle + value + rotationOfSonarOnRobot) / 400.0;// @TODO probably wrong, needs to be in rad. so double theta = msg->angle + value + rotationOfSonarOnRobot
+            double theta = msg->angle + value + rotationOfSonarOnRobot;// @TODO probably wrong, needs to be in rad. so double theta = msg->angle + value + rotationOfSonarOnRobot
             double x = i * cos(theta);
             double y = i * sin(theta);
             sonarImage.at<uchar>((int)(((double)sonarImage.size[0] / 2.0) - x)-1,(int)(((double)sonarImage.size[0] / 2.0) + y)-1) = color*1.2;
@@ -83,8 +84,10 @@ void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::Const
 
 int main(int argc, char *argv[])
 {
+    rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
+
     rclcpp::init(argc, argv);
-    auto node= rclcpp::Node::make_shared("sonar_vis_node");
+    g_node= rclcpp::Node::make_shared("sonar_vis_node");
 
 
 //    rclcpp::start();
@@ -94,11 +97,14 @@ int main(int argc, char *argv[])
     sonarImage = cv::Mat(sizeMat, sizeMat, CV_8UC1, cv::Scalar(0));
 
 //    rclcpp::Subscriber subscriberDataSonar = n_.subscribe("sonar/intensity",1000,imageDataGenerationCallback);
-    node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("sonar/intensity", 10,std::bind(&imageDataGenerationCallback,std::placeholders::_1));
-    publisherSonarImage = node->create_publisher<sensor_msgs::msg::Image>("sonar/image", 10);
+    std::cout << "test" << std::endl;
+    auto subscription =
+            g_node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("scan_echo", qos, imageDataGenerationCallback);
+//    node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("scan_echo", qos,std::bind(&imageDataGenerationCallback,std::placeholders::_1));
+    publisherSonarImage = g_node->create_publisher<sensor_msgs::msg::Image>("sonar/image", 10);
+    std::cout << "test2" << std::endl;
 
-
-    rclcpp::spin(node);
+    rclcpp::spin(g_node);
 
     return 1;
 }

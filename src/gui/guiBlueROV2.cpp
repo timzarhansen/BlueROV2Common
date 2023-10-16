@@ -9,13 +9,13 @@
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "guiofbluerov2");
-    ros::start();
-    ros::NodeHandle n_;
-    rosHandlerGui rosHandler(n_);
-//    std::thread t1(init);
-    ros::AsyncSpinner spinner(2); // Use 2 threads
-    spinner.start();
+
+    rclcpp::init(argc, argv);
+
+    auto nodeShared = std::make_shared<rosHandlerGui>();
+
+
+
 //    Q_INIT_RESOURCE(application);
     QApplication app(argc, argv);
 //    std::cout << QT_VERSION_STR << std::endl;
@@ -31,30 +31,35 @@ int main(int argc, char *argv[])
     std::thread t4(&MainWindow::updateDesiredPosition, &mainWindow);
     mainWindow.setStyleSheet("background-color: rgb(177,205,186); ");
     //ROS to GUI
-    QObject::connect(&rosHandler, &rosHandlerGui::updatePlotPositionVectorROS,
+    QObject::connect(&(*nodeShared), &rosHandlerGui::updatePlotPositionVectorROS,
                      &mainWindow, &MainWindow::updateStateForPlotting,Qt::BlockingQueuedConnection);
-    QObject::connect(&rosHandler, &rosHandlerGui::updateStateOfRobotROS,
+    QObject::connect(&(*nodeShared), &rosHandlerGui::updateStateOfRobotROS,
                      &mainWindow, &MainWindow::updateStateOfRobot,Qt::AutoConnection);
-    QObject::connect(&rosHandler, &rosHandlerGui::updateSonarImageROS,
+    QObject::connect(&(*nodeShared), &rosHandlerGui::updateSonarImageROS,
                      &mainWindow, &MainWindow::updateSonarImage,Qt::BlockingQueuedConnection);
-    QObject::connect(&rosHandler, &rosHandlerGui::updateCameraImageROS,
+    QObject::connect(&(*nodeShared), &rosHandlerGui::updateCameraImageROS,
                      &mainWindow, &MainWindow::updateCameraImage,Qt::BlockingQueuedConnection);
-    QObject::connect(&rosHandler, &rosHandlerGui::updateDVLStateROS,
+    QObject::connect(&(*nodeShared), &rosHandlerGui::updateDVLStateROS,
                      &mainWindow, &MainWindow::updateDVLState,Qt::AutoConnection);
 
 
 
     //GUI to ROS
-    QObject::connect(&mainWindow, &MainWindow::updateDesiredState, &rosHandler, &rosHandlerGui::updateDesiredState,Qt::AutoConnection);
-    QObject::connect(&mainWindow, &MainWindow::resetEKFEstimator, &rosHandler, &rosHandlerGui::resetEKFEstimator,Qt::AutoConnection);
-    QObject::connect(&mainWindow, &MainWindow::updateConfigSonar, &rosHandler, &rosHandlerGui::updateConfigSonar,Qt::AutoConnection);
-    QObject::connect(&mainWindow, &MainWindow::updateAngleCamera, &rosHandler, &rosHandlerGui::updateAngleCamera,Qt::AutoConnection);
-    QObject::connect(&mainWindow, &MainWindow::updateLightIntensity, &rosHandler, &rosHandlerGui::updateLightIntensity,Qt::AutoConnection);
+    QObject::connect(&mainWindow, &MainWindow::updateDesiredState, &(*nodeShared), &rosHandlerGui::updateDesiredState,Qt::AutoConnection);
+//    QObject::connect(&mainWindow, &MainWindow::resetEKFEstimator, &(*nodeShared), &rosHandlerGui::resetEKFEstimator,Qt::AutoConnection);
+//    QObject::connect(&mainWindow, &MainWindow::updateConfigSonar, &(*nodeShared), &rosHandlerGui::updateConfigSonar,Qt::AutoConnection);
+    QObject::connect(&mainWindow, &MainWindow::updateAngleCamera, &(*nodeShared), &rosHandlerGui::updateAngleCamera,Qt::AutoConnection);
+    QObject::connect(&mainWindow, &MainWindow::updateLightIntensity, &(*nodeShared), &rosHandlerGui::updateLightIntensity,Qt::AutoConnection);
 
 
 
     mainWindow.showMaximized();
 
+    app.exec();
+    rclcpp::spin(nodeShared);
+
+    rclcpp::shutdown();
+
 //    mainWindow.updateDesiredPosition();
-    return app.exec();
+    return 1;
 }

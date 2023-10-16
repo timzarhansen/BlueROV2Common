@@ -12,16 +12,6 @@ def generate_launch_description():
     arg = SetEnvironmentVariable('RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED', '1')
     ld.add_action(arg)
 
-    parameters_file_path = Path(get_package_share_directory('waterlinked_a50'), 'param', 'params.yaml')
-    waterlinked_node = Node(
-        package='waterlinked_a50',
-        executable='dvl_node',
-        name='dvl_node',
-        output='screen',
-        parameters=[parameters_file_path],
-        arguments=[]
-    )
-    ld.add_action(waterlinked_node)
 
 
     camera_node = Node(
@@ -59,6 +49,16 @@ def generate_launch_description():
     )
     ld.add_action(leakage_node)
 
+    restart_bottom_node = Node(
+        package='bluerov2common',
+        executable='restartSensorTube',
+        name='restartSensorTube',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(restart_bottom_node)
+
     mavroute_node = Node(
         package='bluerov2common',
         executable='mavrouteStart',
@@ -68,5 +68,7 @@ def generate_launch_description():
         arguments=[]
     )
     ld.add_action(mavroute_node)
+
+
 
     return ld
