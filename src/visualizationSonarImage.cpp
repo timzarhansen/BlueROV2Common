@@ -62,7 +62,7 @@ void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::Share
         std::vector<double> linspaceVector = linspace(-stepSize/2,stepSize/2,10);
         for(const auto& value: linspaceVector) {
             //minus because of the coordinate change from z to top to z to bottom
-            double theta = msg->angle + value + rotationOfSonarOnRobot;// @TODO probably wrong, needs to be in rad. so double theta = msg->angle + value + rotationOfSonarOnRobot
+            double theta =2 * M_PI * (msg->angle + value + rotationOfSonarOnRobot) / 400.0;// @TODO probably wrong, needs to be in rad. so double theta = msg->angle + value + rotationOfSonarOnRobot
             double x = i * cos(theta);
             double y = i * sin(theta);
             sonarImage.at<uchar>((int)(((double)sonarImage.size[0] / 2.0) - x)-1,(int)(((double)sonarImage.size[0] / 2.0) + y)-1) = color*1.2;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 //    rclcpp::Subscriber subscriberDataSonar = n_.subscribe("sonar/intensity",1000,imageDataGenerationCallback);
     std::cout << "test" << std::endl;
     auto subscription =
-            g_node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("scan_echo", qos, imageDataGenerationCallback);
+            g_node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("/sonar/intensity", qos, imageDataGenerationCallback);
 //    node->create_subscription<ping360_sonar_msgs::msg::SonarEcho>("scan_echo", qos,std::bind(&imageDataGenerationCallback,std::placeholders::_1));
     publisherSonarImage = g_node->create_publisher<sensor_msgs::msg::Image>("sonar/image", 10);
     std::cout << "test2" << std::endl;

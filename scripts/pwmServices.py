@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 
 from commonbluerovmsg.srv import *
 import rclpy
@@ -44,13 +43,13 @@ class PWMSignalServer(Node):
         self.gpioPinServo.set_mode(self.servoPin, pigpio.OUTPUT)
         self.gpioPinServo.hardware_PWM(self.servoPin, 50, 0)  # 10000
 
-    def handleLight(self, req, res):
+    def handleLight(self, request, response):
         # start correct lightning
         print("starting handle light")
-        self.gpioPinLight.hardware_PWM(self.LEDPin, 50, req.intensity * 10000)  # 10000
+        self.gpioPinLight.hardware_PWM(self.LEDPin, 50, request.intensity * 10000)  # 10000
         print("done")
-        res = True
-        return res
+        response.worked = True
+        return response
 
     def handleAngleServo(self, req, res):
         print("starting handle servo")
@@ -60,7 +59,7 @@ class PWMSignalServer(Node):
         return res
 
     def controllerAngleServo(self):
-        print("control loop")
+        # print("control loop")
         if self.angleDesired == self.angleCurrent:
             return
         tmpAngleDes = 0
@@ -83,30 +82,23 @@ class PWMSignalServer(Node):
 
 
 
-if __name__ == "__main__":
-
-    rclpy.init(args=sys.argv)
-    try:
-        pwm_server = PWMSignalServer()
-        # pwm_server.initGPIOPins()
-        rclpy.spin(pwm_server)
-        # leak_publisher.destroy_node()
-        rclpy.shutdown()
 
 
-        # myPwmClass = PwmClass()
-        # myPwmClass.initGPIOPins()
-        # rospy.init_node('pwmSignalServer')
-        #
-        # myPwmClass.startLightLEDServer()
-        # myPwmClass.startServoCameraServer()
-        #
-        # rospy.on_shutdown(myPwmClass.shutdownHook)
-        # rate = rospy.Rate(2)
-        # while not rospy.is_shutdown():
-        #
-        #     myPwmClass.controllerAngleServo()
-        #     rate.sleep()
-        #     #rospy.spin()
-    except:
-        pass
+
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    # try:
+    pwm_server = PWMSignalServer()
+    # pwm_server.initGPIOPins()
+    rclpy.spin(pwm_server)
+    # leak_publisher.destroy_node()
+    rclpy.shutdown()
+#
+    # except:
+    #     pass
+
+
+if __name__ == '__main__':
+    main()

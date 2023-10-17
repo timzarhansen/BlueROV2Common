@@ -2,7 +2,7 @@
 // Created by tim-linux on 22.12.21.
 //
 
-#include "controller/controllerOfBluerov2.h"
+#include "controllerOfBluerov2.h"
 
 //void controllerOfBluerov2::callbackReconfiguration(bluerov2common::msg::controllerConfig &config, uint32_t level) {
 //    this->setControllerValues(config.height_i, config.height_d, config.height_p, config.hold_position_p,
@@ -17,17 +17,17 @@ double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP) {
     if (std::abs(this->integratorHeight + 0.01 * errorInZ) < 0.2) {
         this->integratorHeight = this->integratorHeight + 0.01 * errorInZ;
     }
-    std::cout << "desiredDepthTMP" << std::endl;
-
-    std::cout << desiredDepthTMP << std::endl;
-    std::cout << this->currentDepth << std::endl;
+//    std::cout << "desiredDepthTMP" << std::endl;
+//
+//    std::cout << desiredDepthTMP << std::endl;
+//    std::cout << this->currentDepth << std::endl;
 
 
 
 
     double thrustHeight =
             this->height_p * errorInZ - this->height_d * this->currentDepthVel + this->height_i * this->integratorHeight;//PID values
-    std::cout << thrustHeight << std::endl;
+//    std::cout << thrustHeight << std::endl;
     return thrustHeight;
 
 }
@@ -110,7 +110,7 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
 //        //changing the coordinate system
 //        msg.body_rate.y = -msg.body_rate.y;
 //        msg.body_rate.z = -msg.body_rate.z;
-        this->publisherPX4->publish(msg);
+        this->publisherAtitudePX4->publish(msg);
 
 
     } else {//not holding position
@@ -129,7 +129,7 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
                                                                                               this->desiredYaw);
 
         px4_msgs::msg::VehicleAttitudeSetpoint msg;
-        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds();
+        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds()/1000;
         msg.thrust_body[0] = thrustVec(0);
         msg.thrust_body[1] = thrustVec(1);
         msg.thrust_body[2] = thrustVec(2);
@@ -150,7 +150,7 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
 //        //changing the coordinate system
 //        msg.body_rate.y = -msg.body_rate.y;
 //        msg.body_rate.z = -msg.body_rate.z;
-        this->publisherPX4->publish(msg);
+        this->publisherAtitudePX4->publish(msg);
     }
 
     return returnThrust;
@@ -271,6 +271,18 @@ void controllerOfBluerov2::getPoseTarget(Eigen::Vector3d &position, Eigen::Quate
 
 void controllerOfBluerov2::timer_callback(){
     Eigen::Vector3d thrustVector = this->controllLogic();
+    px4_msgs::msg::OffboardControlMode msg{};
+    msg.position = false;
+    msg.velocity = false;
+    msg.acceleration = false;
+    msg.attitude = true;
+    msg.body_rate = true;
+    msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
+    this->publisherOffboardPX4->publish(msg);
+
+
+
+
 
     visualization_msgs::msg::Marker marker;
     marker.header.frame_id = "map_ned";

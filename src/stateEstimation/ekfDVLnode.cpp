@@ -23,6 +23,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "px4_msgs/msg/sensor_baro.hpp"
 #include "px4_msgs/msg/vehicle_air_data.hpp"
+#include "px4_msgs/msg/sensor_combined.hpp"
 
 //#include "../slamTools/generalHelpfulTools.h"
 //#include "waterlinked_dvl/TransducerReportStamped.h"
@@ -41,7 +42,7 @@ public:
 
 
         // External = 0; Mavros = 1; Gazebo = 2
-
+        this->firstMessage = true;
         this->currentInputDVL = 0;
         this->currentInputIMU = 0;
 //        this->subscriberDVL.shutdown();
@@ -51,12 +52,16 @@ public:
         this->positionDVL = Eigen::Vector3d(0, 0, 0);
 
 
-        this->subscriberIMU = this->create_subscription<sensor_msgs::msg::Imu>("imu/data_frd", qos,
+        this->subscriberIMU = this->create_subscription<sensor_msgs::msg::Imu>("/imu/data", qos,
                                                                                std::bind(&RosClassEKF::imuCallback,
+                                                                                         this, std::placeholders::_1));
+
+        this->subscriberPX4IMU = this->create_subscription<px4_msgs::msg::SensorCombined>("/fmu/out/sensor_combined", qos,
+                                                                               std::bind(&RosClassEKF::imuCallbackPX4,
                                                                                          this, std::placeholders::_1));
         std::cout << "test DVL:" << std::endl;
         this->subscriberDVL = this->create_subscription<waterlinked_a50::msg::TransducerReportStamped>(
-                "dvl/transducer_report", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
+                "/velocity_estimate", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
 
 
         this->subscriberDepthOwnTopic = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
@@ -70,11 +75,11 @@ public:
                                                                                                         &RosClassEKF::depthSensorBaroPX4,
                                                                                                         this,
                                                                                                         std::placeholders::_1));
-        this->subscriberDepthSensorVehicleAirData = this->create_subscription<px4_msgs::msg::VehicleAirData>("/fmu/out/vehicle_air_data", qos,
-                                                                                                  std::bind(
-                                                                                                          &RosClassEKF::depthSensorVehicleAir,
-                                                                                                          this,
-                                                                                                          std::placeholders::_1));
+//        this->subscriberDepthSensorVehicleAirData = this->create_subscription<px4_msgs::msg::VehicleAirData>("/fmu/out/vehicle_air_data", qos,
+//                                                                                                  std::bind(
+//                                                                                                          &RosClassEKF::depthSensorVehicleAir,
+//                                                                                                          this,
+//                                                                                                          std::placeholders::_1));
 
 
         this->subscriberHeading = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("magnetic_heading", qos,
@@ -104,6 +109,9 @@ private:
     ekfClassDVL currentEkf;
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriberIMU;
+    rclcpp::Subscription<px4_msgs::msg::SensorCombined>::SharedPtr subscriberPX4IMU;
+
+
     rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepthOwnTopic;
     rclcpp::Subscription<px4_msgs::msg::SensorBaro>::SharedPtr subscriberDepthSensorBaroPX4;
     rclcpp::Subscription<px4_msgs::msg::VehicleAirData>::SharedPtr subscriberDepthSensorVehicleAirData;
@@ -123,17 +131,59 @@ private:
     bool firstMessage;
 
     void imuCallbackHelper(const sensor_msgs::msg::Imu::SharedPtr msg) {
+
+//        std::cout << "takin IMU message"<< std::endl;
+        Eigen::Matrix3d transformationX180DegreeRotationMatrix;
+        Eigen::AngleAxisd rotation_vector2(180.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
+        transformationX180DegreeRotationMatrix = rotation_vector2.toRotationMatrix();
+
+        Eigen::Vector3d acceleration(msg->linear_acceleration.x, msg->linear_acceleration.y,
+                                     msg->linear_acceleration.z);
+        acceleration = transformationX180DegreeRotationMatrix * acceleration;
+
+        Eigen::Vector3d rotationVel(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z);
+        rotationVel = transformationX180DegreeRotationMatrix * rotationVel;
+
+
+        sensor_msgs::msg::Imu newMsg;
+        newMsg.header = msg->header;
+        newMsg.angular_velocity.x = rotationVel.x();
+        newMsg.angular_velocity.y = rotationVel.y();
+        newMsg.angular_velocity.z = rotationVel.z();
+
+        newMsg.linear_acceleration.x = acceleration.x();
+        newMsg.linear_acceleration.y = acceleration.y();
+        newMsg.linear_acceleration.z = acceleration.z();
+        Eigen::Quaterniond rotationRP(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
+
+        Eigen::Vector3d rollPitchYaw = this->getRollPitchYaw(rotationRP.inverse());
+        // @TODO create low pass filter
+        double rollIMUACCEL = atan2(-msg->linear_acceleration.y, msg->linear_acceleration.z);
+        double pitchIMUACCEL = atan2(msg->linear_acceleration.x,
+                                     sqrt(msg->linear_acceleration.y * msg->linear_acceleration.y +
+                                          msg->linear_acceleration.z * msg->linear_acceleration.z));
+
+        rotationRP = getQuaternionFromRPY(-rollIMUACCEL, pitchIMUACCEL, 0);
+        newMsg.orientation.x = rotationRP.x();//not sure if correct
+        newMsg.orientation.y = rotationRP.y();//not sure if correct
+        newMsg.orientation.z = rotationRP.z();//not sure if correct
+        newMsg.orientation.w = rotationRP.w();//not sure if correct
+
+
+
+
+
         Eigen::Quaterniond tmpRot;
-        tmpRot.x() = msg.get()->orientation.x;
-        tmpRot.y() = msg.get()->orientation.y;
-        tmpRot.z() = msg.get()->orientation.z;
-        tmpRot.w() = msg.get()->orientation.w;
+        tmpRot.x() = newMsg.orientation.x;
+        tmpRot.y() = newMsg.orientation.y;
+        tmpRot.z() = newMsg.orientation.z;
+        tmpRot.w() = newMsg.orientation.w;
 
 //        std::cout << msg->linear_acceleration.x<< " " << msg->linear_acceleration.y<< " " << msg->linear_acceleration.z << std::endl;
 
-        currentEkf.predictionImu(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z,
+        currentEkf.predictionImu(newMsg.linear_acceleration.x, newMsg.linear_acceleration.y, newMsg.linear_acceleration.z,
                                  tmpRot, this->positionIMU,
-                                 msg->header.stamp);
+                                 newMsg.header.stamp);
 
         Eigen::Vector3d euler = generalHelpfulTools::getRollPitchYaw(tmpRot);// roll pitch yaw
 
@@ -141,8 +191,8 @@ private:
 //        std::cout << "my Roll: "<< euler.x()*180/M_PI<< std::endl;
 //        std::cout << "my Pitch: "<< euler.y()*180/M_PI<< std::endl;
 //        std::cout << "my Yaw: "<< euler.z()*180/M_PI<< std::endl;
-        currentEkf.updateIMU(euler.x(), euler.y(), msg.get()->angular_velocity.x, msg.get()->angular_velocity.y,
-                             msg.get()->angular_velocity.z, tmpRot, msg->header.stamp);
+        currentEkf.updateIMU(euler.x(), euler.y(), newMsg.angular_velocity.x, newMsg.angular_velocity.y,
+                             newMsg.angular_velocity.z, tmpRot, newMsg.header.stamp);
         pose currentStateEkf = currentEkf.getState();
         geometry_msgs::msg::PoseWithCovarianceStamped poseMsg;
         poseMsg.header.frame_id = "map_ned";
@@ -165,8 +215,32 @@ private:
         twistMsg.twist.twist.angular.x = currentStateEkf.angleVelocity.x();
         twistMsg.twist.twist.angular.y = currentStateEkf.angleVelocity.y();
         twistMsg.twist.twist.angular.z = currentStateEkf.angleVelocity.z();
-        twistMsg.header.stamp = msg->header.stamp;
+        twistMsg.header.stamp = newMsg.header.stamp;
         this->publisherTwistEkf->publish(twistMsg);
+    }
+
+
+
+
+    void imuCallbackPX4(const px4_msgs::msg::SensorCombined::SharedPtr msg) {
+        //change the orientation of the IMU message
+        sensor_msgs::msg::Imu newMsg{};
+        newMsg.linear_acceleration.x = msg->accelerometer_m_s2[0];
+        newMsg.linear_acceleration.y = msg->accelerometer_m_s2[1];
+        newMsg.linear_acceleration.z = msg->accelerometer_m_s2[2];
+
+        newMsg.angular_velocity.x = msg->gyro_rad[0];
+        newMsg.angular_velocity.y = msg->gyro_rad[1];
+        newMsg.angular_velocity.z = msg->gyro_rad[2];
+        newMsg.header.stamp =  rclcpp::Clock(RCL_ROS_TIME).now();
+
+
+
+
+
+        this->updateSlamMutex.lock();
+        this->imuCallbackHelper(std::make_shared<sensor_msgs::msg::Imu>(newMsg));
+        this->updateSlamMutex.unlock();
     }
 
     void imuCallback(const sensor_msgs::msg::Imu::SharedPtr msg) {
@@ -179,6 +253,7 @@ private:
     }
 
     void DVLCallbackDVLHelper(const waterlinked_a50::msg::TransducerReportStamped::SharedPtr msg) {
+//        std::cout << "getting DVL message" << std::endl;
         if (!msg->report.velocity_valid || msg->report.status != 0) {
             //if we don't know anything, the ekf should just go to 0, else the IMU gives direction.
             this->currentEkf.updateDVL(0, 0, 0, this->rotationOfDVL, this->positionDVL, rclcpp::Time(msg->timestamp));
@@ -240,11 +315,18 @@ private:
             this->firstMessage = false;
             return;
         }
-        commonbluerovmsg::msg::HeightStamped::SharedPtr newMsg;
-        newMsg->timestamp = msg->timestamp;
-        newMsg->height = ((msg->pressure-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);
+        commonbluerovmsg::msg::HeightStamped newMsg{};
+//        std::cout << msg->timestamp << std::endl;
+        auto currentTimeOfMessage = std::chrono::microseconds(msg->timestamp)*1000;
+        newMsg.timestamp = uint64_t(currentTimeOfMessage.count()*1000);//currentTimeOfMessage.count();
+
+        newMsg.height = ((msg->pressure-this->pressureWhenStarted)*10.0f)/(CONSTANTS_ONE_G*1000.0f);
+//        std::cout << "start" << std::endl;
+//        std::cout << this->pressureWhenStarted << std::endl;
+//        std::cout << msg->pressure << std::endl;
+        std::cout <<  newMsg.height << std::endl;
         this->updateSlamMutex.lock();
-        this->depthSensorHelper(newMsg);
+        this->depthSensorHelper(std::make_shared<commonbluerovmsg::msg::HeightStamped>(newMsg));
         this->updateSlamMutex.unlock();
     }
     void depthSensorVehicleAir(const px4_msgs::msg::VehicleAirData::SharedPtr msg) {
@@ -264,7 +346,7 @@ private:
 
     void depthSensorHelper(const commonbluerovmsg::msg::HeightStamped::SharedPtr msg) {
         this->currentEkf.updateHeight(msg->height, rclcpp::Time(msg->timestamp));
-    };
+    }
 
     void headingCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg) {
 
@@ -275,6 +357,34 @@ private:
 
     void headingHelper(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg) {
         this->currentEkf.updateHeading(msg->vector.z, msg->header.stamp);
+    }
+
+
+    Eigen::Vector3d getRollPitchYaw(Eigen::Quaterniond quat) {
+        tf2::Quaternion tmp(quat.x(), quat.y(), quat.z(), quat.w());
+        tf2::Matrix3x3 m(tmp);
+        double r, p, y;
+        m.getRPY(r, p, y);
+        Eigen::Vector3d returnVector(r, p, y);
+        return returnVector;
+    }
+
+    Eigen::Quaterniond getQuaternionFromRPY(double roll, double pitch, double yaw) {
+//        tf2::Matrix3x3 m;
+//        m.setRPY(roll,pitch,yaw);
+//        Eigen::Matrix3d m2;
+        tf2::Quaternion qtf2;
+        qtf2.setRPY(roll, pitch, yaw);
+        Eigen::Quaterniond q;
+        q.x() = qtf2.x();
+        q.y() = qtf2.y();
+        q.z() = qtf2.z();
+        q.w() = qtf2.w();
+
+//        q = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
+//            * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
+//            * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+        return q;
     };
 
 public:

@@ -31,7 +31,7 @@ def generate_launch_description():
 
     pwm_node = Node(
         package='bluerov2common',
-        executable='pwmServices',
+        executable='pwmServices.py',
         name='pwmServices',
         output='screen',
         parameters=[],
@@ -41,7 +41,7 @@ def generate_launch_description():
 
     leakage_node = Node(
         package='bluerov2common',
-        executable='leakageSensor',
+        executable='leakageSensor.py',
         name='leakageSensor',
         output='screen',
         parameters=[],
@@ -51,7 +51,7 @@ def generate_launch_description():
 
     restart_bottom_node = Node(
         package='bluerov2common',
-        executable='restartSensorTube',
+        executable='restartSensorTube.py',
         name='restartSensorTube',
         output='screen',
         parameters=[],
@@ -61,7 +61,7 @@ def generate_launch_description():
 
     mavroute_node = Node(
         package='bluerov2common',
-        executable='mavrouteStart',
+        executable='mavrouteStart.sh',
         name='mavrouteStart',
         output='screen',
         parameters=[],

@@ -9,6 +9,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 //#include "mavros_msgs/AttitudeTarget.h"
 #include "px4_msgs/msg/vehicle_attitude_setpoint.hpp"
+#include "px4_msgs/msg/offboard_control_mode.hpp"
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <Eigen/Geometry>
@@ -37,12 +38,17 @@ public:
                 "publisherTwistEkf", qos, std::bind(&controllerOfBluerov2::currentTwistCallback,
                 this,std::placeholders::_1));
 
-        this->publisherPX4 = this->create_publisher<px4_msgs::msg::VehicleAttitudeSetpoint>(
+        this->publisherAtitudePX4 = this->create_publisher<px4_msgs::msg::VehicleAttitudeSetpoint>(
                 "/fmu/in/vehicle_attitude_setpoint", qos);
+
+        this->publisherOffboardPX4 = this->create_publisher<px4_msgs::msg::OffboardControlMode>(
+                "/fmu/in/offboard_control_mode", qos);
+
+
 
         this->publisherVisualization = this->create_publisher<visualization_msgs::msg::Marker>(
                 "controllerThrustVisualization", qos);
-        std::chrono::duration<double> my_timer_duration = std::chrono::duration<double>(1.0 / 30.0);
+        std::chrono::duration<double> my_timer_duration = std::chrono::duration<double>(1.0 / 20.0);
         this->timer_ = this->create_wall_timer(
                 my_timer_duration, std::bind(&controllerOfBluerov2::timer_callback, this));
 
@@ -98,7 +104,8 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscriberCurrentPose;
     rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr subscriberCurrentTwist;
 
-    rclcpp::Publisher<px4_msgs::msg::VehicleAttitudeSetpoint>::SharedPtr publisherPX4;
+    rclcpp::Publisher<px4_msgs::msg::VehicleAttitudeSetpoint>::SharedPtr publisherAtitudePX4;
+    rclcpp::Publisher<px4_msgs::msg::OffboardControlMode>::SharedPtr publisherOffboardPX4;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisherVisualization;
 
 
