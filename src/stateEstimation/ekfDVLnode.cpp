@@ -324,7 +324,7 @@ private:
 //        std::cout << "start" << std::endl;
 //        std::cout << this->pressureWhenStarted << std::endl;
 //        std::cout << msg->pressure << std::endl;
-        std::cout <<  newMsg.height << std::endl;
+//        std::cout <<  newMsg.height << std::endl;
         this->updateSlamMutex.lock();
         this->depthSensorHelper(std::make_shared<commonbluerovmsg::msg::HeightStamped>(newMsg));
         this->updateSlamMutex.unlock();

@@ -33,7 +33,7 @@ def generate_launch_description():
         executable='ping360_node',
         name='ping360_node',
         output='screen',
-        parameters=[{"device": "/dev/ttyUSB2"},
+        parameters=[{"device": "/dev/ttyUSB1"},
                     {"baudrate": 115200},
                     {"gain": 0},
                     {"numberOfSamples": 200},
