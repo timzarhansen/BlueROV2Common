@@ -13,6 +13,7 @@
 
 //#include <geometry_msgs/msg/PoseWithCovarianceStamped.hpp>
 #include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/fluid_pressure.hpp"
 //#include "geometry_msgs/TwistWithCovarianceStamped.h"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 //#include "geometry_msgs/TwistStamped.h"
@@ -56,9 +57,9 @@ public:
                                                                                std::bind(&RosClassEKF::imuCallback,
                                                                                          this, std::placeholders::_1));
 
-        this->subscriberPX4IMU = this->create_subscription<px4_msgs::msg::SensorCombined>("/fmu/out/sensor_combined", qos,
-                                                                               std::bind(&RosClassEKF::imuCallbackPX4,
-                                                                                         this, std::placeholders::_1));
+//        this->subscriberPX4IMU = this->create_subscription<px4_msgs::msg::SensorCombined>("/fmu/out/sensor_combined", qos,
+//                                                                               std::bind(&RosClassEKF::imuCallbackPX4,
+//                                                                                         this, std::placeholders::_1));
         std::cout << "test DVL:" << std::endl;
         this->subscriberDVL = this->create_subscription<waterlinked_a50::msg::TransducerReportStamped>(
                 "/velocity_estimate", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
@@ -70,11 +71,16 @@ public:
                                                                                                         this,
                                                                                                         std::placeholders::_1));
 
-        this->subscriberDepthSensorBaroPX4 = this->create_subscription<px4_msgs::msg::SensorBaro>("/fmu/out/sensor_baro", qos,
-                                                                                                        std::bind(
-                                                                                                        &RosClassEKF::depthSensorBaroPX4,
-                                                                                                        this,
-                                                                                                        std::placeholders::_1));
+//        this->subscriberDepthSensorBaroPX4 = this->create_subscription<px4_msgs::msg::SensorBaro>("/fmu/out/sensor_baro", qos,
+//                                                                                                        std::bind(
+//                                                                                                        &RosClassEKF::depthSensorBaroPX4,
+//                                                                                                        this,
+//                                                                                                        std::placeholders::_1));
+        this->subscriberDepthSensorBaroSensorTube = this->create_subscription<sensor_msgs::msg::FluidPressure>("/pressure", qos,
+                                                                                                  std::bind(
+                                                                                                          &RosClassEKF::depthSensorBaroSensorTubeCallback,
+                                                                                                          this,
+                                                                                                          std::placeholders::_1));
 //        this->subscriberDepthSensorVehicleAirData = this->create_subscription<px4_msgs::msg::VehicleAirData>("/fmu/out/vehicle_air_data", qos,
 //                                                                                                  std::bind(
 //                                                                                                          &RosClassEKF::depthSensorVehicleAir,
@@ -114,6 +120,7 @@ private:
 
     rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepthOwnTopic;
     rclcpp::Subscription<px4_msgs::msg::SensorBaro>::SharedPtr subscriberDepthSensorBaroPX4;
+    rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr subscriberDepthSensorBaroSensorTube;
     rclcpp::Subscription<px4_msgs::msg::VehicleAirData>::SharedPtr subscriberDepthSensorVehicleAirData;
     rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr subscriberHeading;
     rclcpp::Subscription<waterlinked_a50::msg::TransducerReportStamped>::SharedPtr subscriberDVL;
@@ -329,6 +336,29 @@ private:
         this->depthSensorHelper(std::make_shared<commonbluerovmsg::msg::HeightStamped>(newMsg));
         this->updateSlamMutex.unlock();
     }
+
+    void depthSensorBaroSensorTubeCallback(const sensor_msgs::msg::FluidPressure::SharedPtr msg) {\
+
+        if(this->firstMessage){
+            this->pressureWhenStarted = msg->fluid_pressure;
+            this->firstMessage = false;
+            return;
+        }
+        commonbluerovmsg::msg::HeightStamped newMsg{};
+//        std::cout << msg->timestamp << std::endl;
+        auto currentTimeOfMessage = std::chrono::microseconds(msg->header.stamp.nanosec)*1000;
+        newMsg.timestamp = uint64_t(currentTimeOfMessage.count()*1000);//currentTimeOfMessage.count();
+
+        newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*0.01f)/(CONSTANTS_ONE_G*1000.0f);
+        std::cout << "start" << std::endl;
+        std::cout << this->pressureWhenStarted << std::endl;
+        std::cout << msg->fluid_pressure << std::endl;
+        std::cout <<  newMsg.height << std::endl;
+        this->updateSlamMutex.lock();
+        this->depthSensorHelper(std::make_shared<commonbluerovmsg::msg::HeightStamped>(newMsg));
+        this->updateSlamMutex.unlock();
+    }
+
     void depthSensorVehicleAir(const px4_msgs::msg::VehicleAirData::SharedPtr msg) {
         if(this->firstMessage){
             this->pressureWhenStarted = msg->baro_pressure_pa;

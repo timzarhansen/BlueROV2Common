@@ -38,7 +38,7 @@ def generate_launch_description():
                     {"gain": 0},
                     {"numberOfSamples": 500},
                     {"transmitFrequency": 750},
-                    {"sonarRange": 20},
+                    {"sonarRange": 10},
                     {"speedOfSound": 1500},
                     {"debug": False},
                     {"threshold": 200},
@@ -105,5 +105,15 @@ def generate_launch_description():
         arguments=[]
     )
     ld.add_action(baro_node)
+
+    control_node = Node(
+        package='bluerov2common',
+        executable='controllerbluerov2',
+        name='controllerbluerov2',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(control_node)
 
     return ld

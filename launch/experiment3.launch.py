@@ -106,4 +106,14 @@ def generate_launch_description():
     )
     ld.add_action(baro_node)
 
+    control_node = Node(
+        package='bluerov2common',
+        executable='controllerbluerov2',
+        name='controllerbluerov2',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(control_node)
+
     return ld

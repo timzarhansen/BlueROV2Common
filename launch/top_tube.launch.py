@@ -12,7 +12,15 @@ def generate_launch_description():
     arg = SetEnvironmentVariable('RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED', '1')
     ld.add_action(arg)
 
-
+    pigpiod_node = Node(
+        package='bluerov2common',
+        executable='startpigpiod.sh',
+        name='startpigpiod',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(pigpiod_node)
 
     camera_node = Node(
         package='v4l2_camera',
@@ -59,15 +67,15 @@ def generate_launch_description():
     )
     ld.add_action(restart_bottom_node)
 
-    mavroute_node = Node(
-        package='bluerov2common',
-        executable='mavrouteStart.sh',
-        name='mavrouteStart',
-        output='screen',
-        parameters=[],
-        arguments=[]
-    )
-    ld.add_action(mavroute_node)
+    # mavroute_node = Node(
+    #     package='bluerov2common',
+    #     executable='mavrouteStart.sh',
+    #     name='mavrouteStart',
+    #     output='screen',
+    #     parameters=[],
+    #     arguments=[]
+    # )
+    # ld.add_action(mavroute_node)
 
 
 

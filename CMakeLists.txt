@@ -92,6 +92,7 @@ install(PROGRAMS
         scripts/leakageSensor.py
         scripts/restartSensorTube.py
         bashScripts/mavrouteStart.sh
+        bashScripts/startpigpiod.sh
         DESTINATION lib/${PROJECT_NAME}
 )
 

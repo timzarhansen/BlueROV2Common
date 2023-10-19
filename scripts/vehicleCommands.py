@@ -28,8 +28,8 @@ class OffboardControl(Node):
 
         time.sleep(2)
 
-        # self.engage_offboard_mode()
-        self.arm()
+        self.engage_offboard_mode()
+        # self.arm()
         # self.disarm()
         print("command done")
 
