@@ -38,7 +38,7 @@ def generate_launch_description():
                     {"gain": 0},
                     {"numberOfSamples": 500},
                     {"transmitFrequency": 750},
-                    {"sonarRange": 10},
+                    {"sonarRange": 7},
                     {"speedOfSound": 1500},
                     {"debug": False},
                     {"threshold": 200},

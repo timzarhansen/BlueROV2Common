@@ -65,7 +65,7 @@ void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::Share
             double theta =2 * M_PI * (msg->angle + value + rotationOfSonarOnRobot) / 400.0;// @TODO probably wrong, needs to be in rad. so double theta = msg->angle + value + rotationOfSonarOnRobot
             double x = i * cos(theta);
             double y = i * sin(theta);
-            sonarImage.at<uchar>((int)(((double)sonarImage.size[0] / 2.0) - x)-1,(int)(((double)sonarImage.size[0] / 2.0) + y)-1) = color*1.1;
+            sonarImage.at<uchar>((int)(((double)sonarImage.size[0] / 2.0) - x)-1,(int)(((double)sonarImage.size[0] / 2.0) + y)-1) = color*0.9;
         }
     }
     cv::rectangle(sonarImage,cv::Point(0,0),cv::Point(65,65),0,cv::FILLED);

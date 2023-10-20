@@ -91,7 +91,7 @@ Eigen::Vector3d controllerOfBluerov2::controllLogic() {
 
 
         px4_msgs::msg::VehicleAttitudeSetpoint msg;
-        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds();
+        msg.timestamp = rclcpp::Clock(RCL_ROS_TIME).now().nanoseconds()/1000;
         msg.thrust_body[0] = thrustVec(0);
         msg.thrust_body[1] = thrustVec(1);
         msg.thrust_body[2] = thrustVec(2);

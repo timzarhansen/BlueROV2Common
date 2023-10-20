@@ -46,7 +46,7 @@ def generate_launch_description():
                     {"maxAngle": 400},
                     {"minAngle": 0},
                     {"oscillate": True},
-                    {"step": 4},
+                    {"step": 1},
                     {"imgSize": 500},
                     {"queueSize": 1}
                     ],
@@ -115,5 +115,18 @@ def generate_launch_description():
         arguments=[]
     )
     ld.add_action(control_node)
+
+    #tritechNode
+    tritech_node = Node(
+        package='micron_driver_ros',
+        executable='micron_driver_ros_node',
+        name='micron_driver_ros_node',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(tritech_node)
+
+
 
     return ld

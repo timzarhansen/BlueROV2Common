@@ -46,7 +46,7 @@ def generate_launch_description():
                     {"maxAngle": 400},
                     {"minAngle": 0},
                     {"oscillate": True},
-                    {"step": 4},
+                    {"step": 2},
                     {"imgSize": 500},
                     {"queueSize": 1}
                     ],

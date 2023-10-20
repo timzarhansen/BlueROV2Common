@@ -350,10 +350,10 @@ private:
         newMsg.timestamp = uint64_t(currentTimeOfMessage.count()*1000);//currentTimeOfMessage.count();
 
         newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*0.01f)/(CONSTANTS_ONE_G*1000.0f);
-        std::cout << "start" << std::endl;
-        std::cout << this->pressureWhenStarted << std::endl;
-        std::cout << msg->fluid_pressure << std::endl;
-        std::cout <<  newMsg.height << std::endl;
+//        std::cout << "start" << std::endl;
+//        std::cout << this->pressureWhenStarted << std::endl;
+//        std::cout << msg->fluid_pressure << std::endl;
+//        std::cout <<  newMsg.height << std::endl;
         this->updateSlamMutex.lock();
         this->depthSensorHelper(std::make_shared<commonbluerovmsg::msg::HeightStamped>(newMsg));
         this->updateSlamMutex.unlock();

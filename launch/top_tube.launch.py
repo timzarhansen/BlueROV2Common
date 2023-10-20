@@ -12,15 +12,15 @@ def generate_launch_description():
     arg = SetEnvironmentVariable('RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED', '1')
     ld.add_action(arg)
 
-    pigpiod_node = Node(
-        package='bluerov2common',
-        executable='startpigpiod.sh',
-        name='startpigpiod',
-        output='screen',
-        parameters=[],
-        arguments=[]
-    )
-    ld.add_action(pigpiod_node)
+    # pigpiod_node = Node(
+    #     package='bluerov2common',
+    #     executable='startpigpiod.sh',
+    #     name='startpigpiod',
+    #     output='screen',
+    #     parameters=[],
+    #     arguments=[]
+    # )
+    # ld.add_action(pigpiod_node)
 
     camera_node = Node(
         package='v4l2_camera',

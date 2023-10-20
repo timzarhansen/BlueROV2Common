@@ -38,7 +38,7 @@ def generate_launch_description():
                     {"gain": 0},
                     {"numberOfSamples": 500},
                     {"transmitFrequency": 750},
-                    {"sonarRange": 20},
+                    {"sonarRange": 15},
                     {"speedOfSound": 1500},
                     {"debug": False},
                     {"threshold": 200},
@@ -117,3 +117,5 @@ def generate_launch_description():
     ld.add_action(control_node)
 
     return ld
+
+# ros2 bag record /imu/data /sonar/intensity /velocity_estimate /pressure /position_estimate /fmu/out/sensor_baro /fmu/out/sensor_combined /rigid_bodies /markers
