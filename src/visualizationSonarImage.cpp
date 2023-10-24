@@ -58,7 +58,12 @@ void imageDataGenerationCallback(const ping360_sonar_msgs::msg::SonarEcho::Share
         if (i<sonarImage.size[0]){
             color = msg->intensities[i * linear_factor - 1];
         }
-        double stepSize = (msg->angle-lastAngle);//1;
+//        std::cout << msg->angle << std::endl;
+        double stepSize = msg->step_size;//1;
+//        if(stepSize>M_PI*1.5){
+//            std::cout << stepSize << std::endl;
+//            stepSize = abs(stepSize-400.0);
+//        }
         std::vector<double> linspaceVector = linspace(-stepSize/2,stepSize/2,10);
         for(const auto& value: linspaceVector) {
             //minus because of the coordinate change from z to top to z to bottom

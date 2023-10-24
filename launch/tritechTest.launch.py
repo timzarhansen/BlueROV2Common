@@ -122,11 +122,16 @@ def generate_launch_description():
         executable='micron_driver_ros_node',
         name='micron_driver_ros_node',
         output='screen',
-        parameters=[],
+        parameters=[{"/micron_driver/range_": 15.0},
+                    {"/micron_driver/velocity_of_sound_": 1500.0},
+                    {"/micron_driver/angle_step_size_": 16},
+                    {"/micron_driver/leftLimit_": 6400},
+                    {"/micron_driver/rightLimit_": 1}
+
+                    ],
         arguments=[]
     )
     ld.add_action(tritech_node)
 
-
-
+# ros2 bag record /imu/data /sonar/intensity /velocity_estimate /pressure /position_estimate /fmu/out/sensor_baro /fmu/out/sensor_combined /rigid_bodies /markers /tritech_sonar/scan_lines /fmu/out/actuator_outputs
     return ld
