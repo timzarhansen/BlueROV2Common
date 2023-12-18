@@ -54,7 +54,7 @@ include_directories(src/generalTools
 
 add_executable(ekfNode src/stateEstimation/ekfDVLnode.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h src/generalTools/generalHelpfulTools.cpp )
 ament_target_dependencies(ekfNode rclcpp std_msgs sensor_msgs commonbluerovmsg waterlinked_a50 tf2 Eigen3 px4_msgs)
-target_link_libraries(ekfNode )
+#target_link_libraries(ekfNode )
 
 
 #add_executable(testFile src/testFile.cpp src/stateEstimation/pose.h src/stateEstimation/ekfDVL.cpp src/stateEstimation/ekfDVL.h )

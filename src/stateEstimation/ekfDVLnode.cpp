@@ -94,11 +94,11 @@ public:
                                                                                                         this,
                                                                                                         std::placeholders::_1));
 
-        this->serviceResetEkf = this->create_service<commonbluerovmsg::srv::ResetEkf>("resetCurrentEKF",
-                                                                                      std::bind(&RosClassEKF::resetEKF,
-                                                                                                this,
-                                                                                                std::placeholders::_1,
-                                                                                                std::placeholders::_2));
+//        this->serviceResetEkf = this->create_service<commonbluerovmsg::srv::ResetEkf>("resetCurrentEKF",
+//                                                                                      std::bind(&RosClassEKF::resetEKF,
+//                                                                                                this,
+//                                                                                                std::placeholders::_1,
+//                                                                                                std::placeholders::_2));
 
         this->publisherPoseEkf = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
                 "publisherPoseEkf", qos);
@@ -131,7 +131,7 @@ private:
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
     Eigen::Vector3d positionIMU, positionDVL;
-    rclcpp::Service<commonbluerovmsg::srv::ResetEkf>::SharedPtr serviceResetEkf;
+
     int currentInputDVL;
     int currentInputIMU;
     double pressureWhenStarted;
