@@ -11,7 +11,7 @@ from rclpy.node import Node
 
 
 class pwmClass(Node):
-    resetPin = 20
+    resetPin = 18
     # localPiGPIO = None
     gpioPinSonar = None
 
@@ -30,11 +30,11 @@ class pwmClass(Node):
 
     def handleSonar(self, req, res):
         # start restart Sonar
+        if req.tube_state == 1:
+            self.gpioPinSonar.write(self.resetPin, 1)
+        else:
+            self.gpioPinSonar.write(self.resetPin, 0)
 
-        self.gpioPinSonar.write(self.resetPin, 1)
-
-        time.sleep(req.time_until_restart)
-        self.gpioPinSonar.write(self.resetPin, 0)
         # res = commonbluerovmsg.srv.RestartSonarService.Response
         res.saved = True
         return res

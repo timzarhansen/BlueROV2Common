@@ -141,7 +141,9 @@ private:
 
 //        std::cout << "takin IMU message"<< std::endl;
         Eigen::Matrix3d transformationX180DegreeRotationMatrix;
-        Eigen::AngleAxisd rotation_vector2(180.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
+//        Eigen::AngleAxisd rotation_vector2(180.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
+        Eigen::AngleAxisd rotation_vector2(0.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
+
         transformationX180DegreeRotationMatrix = rotation_vector2.toRotationMatrix();
 
         Eigen::Vector3d acceleration(msg->linear_acceleration.x, msg->linear_acceleration.y,
@@ -170,7 +172,9 @@ private:
                                      sqrt(msg->linear_acceleration.y * msg->linear_acceleration.y +
                                           msg->linear_acceleration.z * msg->linear_acceleration.z));
 
-        rotationRP = getQuaternionFromRPY(-rollIMUACCEL, pitchIMUACCEL, 0);
+        rotationRP = getQuaternionFromRPY(rollIMUACCEL, pitchIMUACCEL, 0);
+//        rotationRP = getQuaternionFromRPY(-rollIMUACCEL, pitchIMUACCEL, 0);
+
         newMsg.orientation.x = rotationRP.x();//not sure if correct
         newMsg.orientation.y = rotationRP.y();//not sure if correct
         newMsg.orientation.z = rotationRP.z();//not sure if correct

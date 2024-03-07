@@ -17,19 +17,11 @@ double controllerOfBluerov2::calculateDepthThrust(double desiredDepthTMP) {
     if (std::abs(this->integratorHeight + 0.01 * errorInZ) < 0.2) {
         this->integratorHeight = this->integratorHeight + 0.01 * errorInZ;
     }
-//    std::cout << "desiredDepthTMP" << std::endl;
-//
-//    std::cout << desiredDepthTMP << std::endl;
-//    std::cout << this->currentDepth << std::endl;
-
-
-
 
     double thrustHeight =
             this->height_p * errorInZ - this->height_d * this->currentDepthVel + this->height_i * this->integratorHeight;//PID values
-//    std::cout << thrustHeight << std::endl;
-    return thrustHeight;
 
+    return thrustHeight;
 }
 
 void controllerOfBluerov2::setControllerValues(double height_i_tmp, double height_d_tmp, double height_p_tmp,
@@ -277,7 +269,7 @@ void controllerOfBluerov2::timer_callback(){
     msg.acceleration = false;
     msg.attitude = true;
     msg.body_rate = true;
-    msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
+    msg.timestamp = this->get_clock()->now().nanoseconds() / 1000.0;
     this->publisherOffboardPX4->publish(msg);
 
 
