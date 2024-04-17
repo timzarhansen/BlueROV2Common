@@ -204,7 +204,9 @@ ekfClassDVL::updateHeight(double depth, rclcpp::Time timeStamp) {
     }
     //for saving the current EKF pose difference in
     Eigen::VectorXd currentStateBeforeUpdate = this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel();
-
+//    std::cout << "current height update" << std::endl;
+//    std::cout << currentStateBeforeUpdate[5] << std::endl;
+//    std::cout << currentStateBeforeUpdate[2] << std::endl;
 
     Eigen::VectorXd innovation;
     Eigen::VectorXd z = Eigen::VectorXd::Zero(12);
@@ -217,6 +219,8 @@ ekfClassDVL::updateHeight(double depth, rclcpp::Time timeStamp) {
     Eigen::VectorXd newState = this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel() + K * innovation;
     this->stateOfEKF.applyState(newState);
     this->stateOfEKF.covariance = (Eigen::MatrixXd::Identity(12, 12) - K * H) * this->stateOfEKF.covariance;
+//    std::cout << this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel()[2] << std::endl;
+//    std::cout << this->stateOfEKF.getStatexyzvxvyvzrpyrvelpvelyvel()[5] << std::endl;
 }
 
 void

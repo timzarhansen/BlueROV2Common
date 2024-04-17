@@ -16,7 +16,7 @@ class pwmClass(Node):
     gpioPinSonar = None
 
     def __init__(self):
-        super().__init__("reset_sensor_tube")
+        super().__init__("power_conrol_bottom_tube")
         # GPIO.setmode(GPIO.BCM)
 
         # GPIO.setup(self.LEDPin, GPIO.OUT)  # light Pin
@@ -26,7 +26,7 @@ class pwmClass(Node):
         self.gpioPinSonar.set_mode(self.resetPin, pigpio.OUTPUT)
         self.gpioPinSonar.write(self.resetPin, 0)
         # self.gpioPinSonar.hardware_PWM(self.sonarPin, 50, 0)#10000
-        s = self.create_service(commonbluerovmsg.srv.RestartSonarService, 'reset_sonar', self.handleSonar)
+        s = self.create_service(commonbluerovmsg.srv.RestartSonarService, 'power_control_bottom_service', self.handleSonar)
 
     def handleSonar(self, req, res):
         # start restart Sonar

@@ -90,8 +90,9 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
         scripts/pwmServices.py
         scripts/leakageSensor.py
-        scripts/restartSensorTube.py
-        bashScripts/mavrouteStart.sh
+        scripts/powerControlBotomTube.py
+        scripts/mjpeg_cam_python.py
+        bashScripts/xrcClientStart.sh
         bashScripts/startpigpiod.sh
         DESTINATION lib/${PROJECT_NAME}
 )

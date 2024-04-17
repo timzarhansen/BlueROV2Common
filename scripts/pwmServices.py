@@ -3,6 +3,7 @@
 from commonbluerovmsg.srv import *
 import rclpy
 from rclpy.node import Node
+from commonbluerovmsg.msg import LeakageDetection
 # import RPi.GPIO as GPIO
 import pigpio
 
@@ -12,8 +13,10 @@ class PWMSignalServer(Node):
     # GPIO allocation
     servoPin = 12
     LEDPin = 13
+    LeakagePin = 7
     gpioPinServo = None
     gpioPinLight = None
+    gpioPinLeakage = None
     angleDesired = 90
     angleCurrent = 90
 
@@ -21,14 +24,19 @@ class PWMSignalServer(Node):
         super().__init__('pwm_signal_server')
         # print("test1")
         self.initGPIOPins()
-        timer_period = 2
+        timer_period = 1
         # print("test2")
-        self.timer = self.create_timer(timer_period, self.controllerAngleServo)
+        self.timerControl = self.create_timer(timer_period, self.controllerAngleServo)
+        self.timerLeakage = self.create_timer(timer_period, self.readLeakage)
         # print("test3")
         self.srvLight = self.create_service(LightDensity, 'light_service', self.handleLight)
         # print("test4")
         self.srvCamera = self.create_service(CameraAngle, 'camera_angle_service', self.handleAngleServo)
         # print("test5")
+
+        self.publisher_ = self.create_publisher(LeakageDetection, 'leakage_status_top_tube', 1)
+
+
 
 
 
@@ -42,6 +50,8 @@ class PWMSignalServer(Node):
         self.gpioPinServo = pigpio.pi()
         self.gpioPinServo.set_mode(self.servoPin, pigpio.OUTPUT)
         self.gpioPinServo.hardware_PWM(self.servoPin, 50, 0)  # 10000
+        self.gpioPinLeakage = pigpio.pi()
+        self.gpioPinLeakage.set_mode(self.LeakagePin, pigpio.INPUT)
 
     def handleLight(self, request, response):
         # start correct lightning
@@ -74,11 +84,23 @@ class PWMSignalServer(Node):
         self.gpioPinLight.hardware_PWM(self.servoPin, 50, int(duty * 10000))  # 10000
         self.angleCurrent = tmpAngleDes
 
-    # def shutdownHook(self):
-    #      #self.gpioPinLight.stop()
-    #      print("shutdown")
-    #      #self.gpioPinServo.stop()
-    #      #GPIO.cleanup()
+
+    def readLeakage(self):
+        output = self.gpioPinLeakage.read(self.LeakagePin)
+        # print(output)
+        if output:  # Physically read the pin now
+            # print(colored(255, 0, 0, '################# MAYDAY LEAKAGE DETECTED WATER IN THE BOAT #################'))
+            msg = LeakageDetection()
+            msg.timestamp = self.get_clock().now().nanoseconds
+            msg.leakage_detected = True
+            self.publisher_.publish(msg)
+        else:
+            msg = LeakageDetection()
+            msg.timestamp = self.get_clock().now().nanoseconds
+            msg.leakage_detected = False
+            self.publisher_.publish(msg)
+
+
 
 
 

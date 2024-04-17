@@ -50,7 +50,7 @@ def main(args=None):
     except:
         print("Was not able to initialize GPIO Input")
         exit(-1)
-    print("test3")
+    # print("test3")
     rclpy.spin(leak_publisher)
     # leak_publisher.destroy_node()
     rclpy.shutdown()

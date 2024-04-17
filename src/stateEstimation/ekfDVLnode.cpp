@@ -142,7 +142,7 @@ private:
 //        std::cout << "takin IMU message"<< std::endl;
         Eigen::Matrix3d transformationX180DegreeRotationMatrix;
 //        Eigen::AngleAxisd rotation_vector2(180.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
-        Eigen::AngleAxisd rotation_vector2(0.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
+        Eigen::AngleAxisd rotation_vector2(180.0 / 180.0 * 3.14159, Eigen::Vector3d(1, 0, 0));
 
         transformationX180DegreeRotationMatrix = rotation_vector2.toRotationMatrix();
 
@@ -316,6 +316,7 @@ private:
     }
 
     void depthSensorCallback(const commonbluerovmsg::msg::HeightStamped::SharedPtr msg) {
+        std::cout << "this doesnt happen right?" << std::endl;
         this->updateSlamMutex.lock();
         this->depthSensorHelper(msg);
         this->updateSlamMutex.unlock();
@@ -341,7 +342,7 @@ private:
         this->updateSlamMutex.unlock();
     }
 
-    void depthSensorBaroSensorTubeCallback(const sensor_msgs::msg::FluidPressure::SharedPtr msg) {\
+    void depthSensorBaroSensorTubeCallback(const sensor_msgs::msg::FluidPressure::SharedPtr msg) {
 
         if(this->firstMessage){
             this->pressureWhenStarted = msg->fluid_pressure;

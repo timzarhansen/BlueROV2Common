@@ -12,64 +12,64 @@ def generate_launch_description():
     arg = SetEnvironmentVariable('RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED', '1')
     ld.add_action(arg)
 
-    # pigpiod_node = Node(
+    xrc_node = Node(
+        package='bluerov2common',
+        executable='xrcClientStart.sh',
+        name='xrcClientStart',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(xrc_node)
+
+    # camera_node = Node(
+    #     package='v4l2_camera',
+    #     executable='v4l2_camera_node',
+    #     name='v4l2_camera_node',
+    #     output='screen',
+    #     parameters=[
+    #         {"video_device": "/dev/video0"},
+    #         {"pixel_format": "YUYV"},
+    #         {"image_size": [640, 480]},
+    #         {"time_per_frame": [1, 15]}
+    #     ],
+    #     arguments=[]
+    # )
+    # ld.add_action(camera_node)
+
+    # pwm_node = Node(
     #     package='bluerov2common',
-    #     executable='startpigpiod.sh',
-    #     name='startpigpiod',
+    #     executable='pwmServices.py',
+    #     name='pwmServices',
     #     output='screen',
     #     parameters=[],
     #     arguments=[]
     # )
-    # ld.add_action(pigpiod_node)
+    # ld.add_action(pwm_node)
 
-    camera_node = Node(
-        package='v4l2_camera',
-        executable='v4l2_camera_node',
-        name='v4l2_camera_node',
-        output='screen',
-        parameters=[
-            {"video_device": "/dev/video0"},
-            {"pixel_format": "YUYV"},
-            {"image_size": [640, 480]},
-            {"time_per_frame": [1, 15]}
-        ],
-        arguments=[]
-    )
-    ld.add_action(camera_node)
+    # leakage_node = Node(
+    #     package='bluerov2common',
+    #     executable='leakageSensor.py',
+    #     name='leakageSensor',
+    #     output='screen',
+    #     parameters=[],
+    #     arguments=[]
+    # )
+    # ld.add_action(leakage_node)
 
-    pwm_node = Node(
+    video_node = Node(
         package='bluerov2common',
-        executable='pwmServices.py',
-        name='pwmServices',
+        executable='mjpeg_cam_python.py',
+        name='mjpeg_cam_python',
         output='screen',
         parameters=[],
         arguments=[]
     )
-    ld.add_action(pwm_node)
-
-    leakage_node = Node(
-        package='bluerov2common',
-        executable='leakageSensor.py',
-        name='leakageSensor',
-        output='screen',
-        parameters=[],
-        arguments=[]
-    )
-    ld.add_action(leakage_node)
-
-    restart_bottom_node = Node(
-        package='bluerov2common',
-        executable='restartSensorTube.py',
-        name='restartSensorTube',
-        output='screen',
-        parameters=[],
-        arguments=[]
-    )
-    ld.add_action(restart_bottom_node)
+    ld.add_action(video_node)
 
     # mavroute_node = Node(
     #     package='bluerov2common',
-    #     executable='mavrouteStart.sh',
+    #     executable='xrcClientStart.sh',
     #     name='mavrouteStart',
     #     output='screen',
     #     parameters=[],
