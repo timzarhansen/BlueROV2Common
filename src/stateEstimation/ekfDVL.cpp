@@ -166,7 +166,7 @@ ekfClassDVL::updateDVL(double xVel, double yVel, double zVel, Eigen::Quaterniond
 //    std::cout << angularVelocity.cross(positionDVL) << std::endl;
     // velocityAngular has to be changed to correct rotation(world velocityAngular)
     Eigen::Vector3d velocityLocalLinear = this->getRotationVector() * velocityBodyLinear;
-
+//    Eigen::Vector3d testVel = this->getRotationVector().toRotationMatrix() * velocityBodyLinear;
     Eigen::VectorXd innovation;
     Eigen::VectorXd z = Eigen::VectorXd::Zero(12);
     z(3) = velocityLocalLinear(0);

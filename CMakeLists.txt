@@ -88,8 +88,10 @@ install(DIRECTORY launch DESTINATION share/${PROJECT_NAME}/)
 ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
-        scripts/pwmServices.py
-        scripts/leakageSensor.py
+        scripts/pwmServicesTopTube.py
+        scripts/pwmServicesSensorTube.py
+        scripts/leakageSensorTopTube.py
+        scripts/leakageSensorSensorTube.py
         scripts/powerControlBotomTube.py
         scripts/mjpeg_cam_python.py
         bashScripts/xrcClientStart.sh

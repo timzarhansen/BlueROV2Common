@@ -25,6 +25,7 @@
 #include "px4_msgs/msg/sensor_baro.hpp"
 #include "px4_msgs/msg/vehicle_air_data.hpp"
 #include "px4_msgs/msg/sensor_combined.hpp"
+#include "px4_msgs/msg/vehicle_odometry.hpp"
 
 //#include "../slamTools/generalHelpfulTools.h"
 //#include "waterlinked_dvl/TransducerReportStamped.h"
@@ -35,7 +36,9 @@
 //#include "bluerov2common/ekfParameterConfig.h"
 //#include <dynamic_reconfigure/server.h>
 #include <commonbluerovmsg/msg/state_of_blue_rov.hpp>
+
 static constexpr double CONSTANTS_ONE_G = 9.80665;
+
 class RosClassEKF : public rclcpp::Node {
 public:
     RosClassEKF() : Node("ekfStateEstimation"), currentEkf(rclcpp::Clock(RCL_ROS_TIME).now()) {
@@ -65,22 +68,24 @@ public:
                 "/velocity_estimate", qos, std::bind(&RosClassEKF::DVLCallbackDVL, this, std::placeholders::_1));
 
 
-        this->subscriberDepthOwnTopic = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro", qos,
+        this->subscriberDepthOwnTopic = this->create_subscription<commonbluerovmsg::msg::HeightStamped>("height_baro",
+                                                                                                        qos,
                                                                                                         std::bind(
-                                                                                                        &RosClassEKF::depthSensorCallback,
-                                                                                                        this,
-                                                                                                        std::placeholders::_1));
+                                                                                                                &RosClassEKF::depthSensorCallback,
+                                                                                                                this,
+                                                                                                                std::placeholders::_1));
 
 //        this->subscriberDepthSensorBaroPX4 = this->create_subscription<px4_msgs::msg::SensorBaro>("/fmu/out/sensor_baro", qos,
 //                                                                                                        std::bind(
 //                                                                                                        &RosClassEKF::depthSensorBaroPX4,
 //                                                                                                        this,
 //                                                                                                        std::placeholders::_1));
-        this->subscriberDepthSensorBaroSensorTube = this->create_subscription<sensor_msgs::msg::FluidPressure>("/pressure", qos,
-                                                                                                  std::bind(
-                                                                                                          &RosClassEKF::depthSensorBaroSensorTubeCallback,
-                                                                                                          this,
-                                                                                                          std::placeholders::_1));
+        this->subscriberDepthSensorBaroSensorTube = this->create_subscription<sensor_msgs::msg::FluidPressure>(
+                "/pressure", qos,
+                std::bind(
+                        &RosClassEKF::depthSensorBaroSensorTubeCallback,
+                        this,
+                        std::placeholders::_1));
 //        this->subscriberDepthSensorVehicleAirData = this->create_subscription<px4_msgs::msg::VehicleAirData>("/fmu/out/vehicle_air_data", qos,
 //                                                                                                  std::bind(
 //                                                                                                          &RosClassEKF::depthSensorVehicleAir,
@@ -105,7 +110,15 @@ public:
         this->publisherTwistEkf = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
                 "publisherTwistEkf", qos);
 
+        this->publisherVehicleOdometry = this->create_publisher<px4_msgs::msg::VehicleOdometry>(
+                "/fmu/in/vehicle_visual_odometry", qos);
 
+        std::chrono::duration<double> my_timer_duration = std::chrono::duration<double>(1.0 / 30.0);
+        this->timer_ = this->create_wall_timer(
+                my_timer_duration, std::bind(&RosClassEKF::timer_callback, this));
+
+
+        this->timeAtStart = rclcpp::Time();
     }
 
 private:
@@ -117,7 +130,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriberIMU;
     rclcpp::Subscription<px4_msgs::msg::SensorCombined>::SharedPtr subscriberPX4IMU;
 
-
+    //subscriber
     rclcpp::Subscription<commonbluerovmsg::msg::HeightStamped>::SharedPtr subscriberDepthOwnTopic;
     rclcpp::Subscription<px4_msgs::msg::SensorBaro>::SharedPtr subscriberDepthSensorBaroPX4;
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr subscriberDepthSensorBaroSensorTube;
@@ -125,9 +138,15 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr subscriberHeading;
     rclcpp::Subscription<waterlinked_a50::msg::TransducerReportStamped>::SharedPtr subscriberDVL;
 
-
+    //publisher
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publisherPoseEkf;
     rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr publisherTwistEkf;
+    rclcpp::Publisher<px4_msgs::msg::VehicleOdometry>::SharedPtr publisherVehicleOdometry;
+
+    //Timer
+
+    rclcpp::TimerBase::SharedPtr timer_;
+
     std::mutex updateSlamMutex;
     Eigen::Quaterniond rotationOfDVL;
     Eigen::Vector3d positionIMU, positionDVL;
@@ -136,6 +155,7 @@ private:
     int currentInputIMU;
     double pressureWhenStarted;
     bool firstMessage;
+    rclcpp::Time timeAtStart;
 
     void imuCallbackHelper(const sensor_msgs::msg::Imu::SharedPtr msg) {
 
@@ -192,7 +212,8 @@ private:
 
 //        std::cout << msg->linear_acceleration.x<< " " << msg->linear_acceleration.y<< " " << msg->linear_acceleration.z << std::endl;
 
-        currentEkf.predictionImu(newMsg.linear_acceleration.x, newMsg.linear_acceleration.y, newMsg.linear_acceleration.z,
+        currentEkf.predictionImu(newMsg.linear_acceleration.x, newMsg.linear_acceleration.y,
+                                 newMsg.linear_acceleration.z,
                                  tmpRot, this->positionIMU,
                                  newMsg.header.stamp);
 
@@ -231,8 +252,6 @@ private:
     }
 
 
-
-
     void imuCallbackPX4(const px4_msgs::msg::SensorCombined::SharedPtr msg) {
         //change the orientation of the IMU message
         sensor_msgs::msg::Imu newMsg{};
@@ -243,10 +262,7 @@ private:
         newMsg.angular_velocity.x = msg->gyro_rad[0];
         newMsg.angular_velocity.y = msg->gyro_rad[1];
         newMsg.angular_velocity.z = msg->gyro_rad[2];
-        newMsg.header.stamp =  rclcpp::Clock(RCL_ROS_TIME).now();
-
-
-
+        newMsg.header.stamp = rclcpp::Clock(RCL_ROS_TIME).now();
 
 
         this->updateSlamMutex.lock();
@@ -307,7 +323,8 @@ private:
     }
 
 
-    bool resetEKF(const std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Request> req, std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Response> res) {
+    bool resetEKF(const std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Request> req,
+                  std::shared_ptr<commonbluerovmsg::srv::ResetEkf::Response> res) {
         this->updateSlamMutex.lock();
         this->currentEkf.resetToPos(req->x_pos, req->y_pos, req->yaw, req->reset_covariances);
         this->updateSlamMutex.unlock();
@@ -321,18 +338,19 @@ private:
         this->depthSensorHelper(msg);
         this->updateSlamMutex.unlock();
     }
+
     void depthSensorBaroPX4(const px4_msgs::msg::SensorBaro::SharedPtr msg) {
-        if(this->firstMessage){
+        if (this->firstMessage) {
             this->pressureWhenStarted = msg->pressure;
             this->firstMessage = false;
             return;
         }
         commonbluerovmsg::msg::HeightStamped newMsg{};
 //        std::cout << msg->timestamp << std::endl;
-        auto currentTimeOfMessage = std::chrono::microseconds(msg->timestamp)*1000;
-        newMsg.timestamp = uint64_t(currentTimeOfMessage.count()*1000);//currentTimeOfMessage.count();
+        auto currentTimeOfMessage = std::chrono::microseconds(msg->timestamp) * 1000;
+        newMsg.timestamp = uint64_t(currentTimeOfMessage.count() * 1000);//currentTimeOfMessage.count();
 
-        newMsg.height = ((msg->pressure-this->pressureWhenStarted)*10.0f)/(CONSTANTS_ONE_G*1000.0f);
+        newMsg.height = ((msg->pressure - this->pressureWhenStarted) * 10.0f) / (CONSTANTS_ONE_G * 1000.0f);
 //        std::cout << "start" << std::endl;
 //        std::cout << this->pressureWhenStarted << std::endl;
 //        std::cout << msg->pressure << std::endl;
@@ -344,17 +362,18 @@ private:
 
     void depthSensorBaroSensorTubeCallback(const sensor_msgs::msg::FluidPressure::SharedPtr msg) {
 
-        if(this->firstMessage){
+        if (this->firstMessage) {
             this->pressureWhenStarted = msg->fluid_pressure;
             this->firstMessage = false;
             return;
         }
         commonbluerovmsg::msg::HeightStamped newMsg{};
 //        std::cout << msg->timestamp << std::endl;
-        auto currentTimeOfMessage = std::chrono::microseconds(msg->header.stamp.nanosec)*1000;
-        newMsg.timestamp = uint64_t(currentTimeOfMessage.count()*1000);//currentTimeOfMessage.count();
+        auto currentTimeOfMessage = std::chrono::microseconds(msg->header.stamp.nanosec) * 1000;
+        newMsg.timestamp = uint64_t(currentTimeOfMessage.count() * 1000);//currentTimeOfMessage.count();
+//        newMsg.height = ((msg->fluid_pressure - this->pressureWhenStarted) * 0.01f) / (CONSTANTS_ONE_G * 1000.0f);
 
-        newMsg.height = ((msg->fluid_pressure-this->pressureWhenStarted)*0.01f)/(CONSTANTS_ONE_G*1000.0f);
+        newMsg.height = ((msg->fluid_pressure - this->pressureWhenStarted) ) / (CONSTANTS_ONE_G * 1000.0f);
 //        std::cout << "start" << std::endl;
 //        std::cout << this->pressureWhenStarted << std::endl;
 //        std::cout << msg->fluid_pressure << std::endl;
@@ -365,14 +384,14 @@ private:
     }
 
     void depthSensorVehicleAir(const px4_msgs::msg::VehicleAirData::SharedPtr msg) {
-        if(this->firstMessage){
+        if (this->firstMessage) {
             this->pressureWhenStarted = msg->baro_pressure_pa;
             this->firstMessage = false;
             return;
         }
         commonbluerovmsg::msg::HeightStamped::SharedPtr newMsg;
         newMsg->timestamp = msg->timestamp;
-        newMsg->height = ((msg->baro_pressure_pa-this->pressureWhenStarted)*1.0f)/(CONSTANTS_ONE_G*1000.0f);
+        newMsg->height = ((msg->baro_pressure_pa - this->pressureWhenStarted) * 1.0f) / (CONSTANTS_ONE_G * 1000.0f);
 
         this->updateSlamMutex.lock();
         this->depthSensorHelper(newMsg);
@@ -421,6 +440,53 @@ private:
 //            * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
         return q;
     };
+
+    void timer_callback() {
+        px4_msgs::msg::VehicleOdometry odometryPose;
+
+        pose currentEKFPose = this->currentEkf.getState();
+
+
+        odometryPose.pose_frame = odometryPose.POSE_FRAME_NED;
+        odometryPose.velocity_frame = odometryPose.VELOCITY_FRAME_NED;
+
+        odometryPose.position[0] = currentEKFPose.position.x();
+        odometryPose.position[1] = currentEKFPose.position.y();
+        odometryPose.position[2] = currentEKFPose.position.z();
+        Eigen::Quaterniond currentQuat = generalHelpfulTools::getQuaternionFromRPY(0, 0, currentEKFPose.rotation[2]);
+        odometryPose.q[0] = currentQuat.w();
+        odometryPose.q[1] = currentQuat.x();
+        odometryPose.q[2] = currentQuat.y();
+        odometryPose.q[3] = currentQuat.z();
+
+        odometryPose.velocity[0] = NAN;
+        odometryPose.velocity[1] = NAN;
+        odometryPose.velocity[2] = NAN;
+
+        odometryPose.angular_velocity[0] = NAN;
+        odometryPose.angular_velocity[1] = NAN;
+        odometryPose.angular_velocity[2] = NAN;
+
+        odometryPose.position_variance[0] = NAN;
+        odometryPose.position_variance[1] = NAN;
+        odometryPose.position_variance[2] = NAN;
+
+        odometryPose.orientation_variance[0] = NAN;
+        odometryPose.orientation_variance[1] = NAN;
+        odometryPose.orientation_variance[2] = NAN;
+
+        odometryPose.velocity_variance[0] = NAN;
+        odometryPose.velocity_variance[1] = NAN;
+        odometryPose.velocity_variance[2] = NAN;
+
+        odometryPose.velocity[0] = NAN;
+        odometryPose.velocity[1] = NAN;
+        odometryPose.velocity[2] = NAN;
+
+        odometryPose.timestamp = (rclcpp::Time() - this->timeAtStart).nanoseconds() * 0.001;
+
+        this->publisherVehicleOdometry->publish(odometryPose);
+    }
 
 public:
     pose getPoseOfEKF() {

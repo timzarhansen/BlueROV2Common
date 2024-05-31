@@ -221,7 +221,7 @@ void controllerOfBluerov2::desiredStateCallback(const commonbluerovmsg::msg::Des
 
         //std::cout << this->currentYaw << std::endl;
         tmpDouble = this->currentYaw;
-         this->holdYaw = tmpDouble;
+        this->holdYaw = tmpDouble;
 
     }
 }

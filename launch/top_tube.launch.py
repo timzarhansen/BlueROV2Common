@@ -39,7 +39,7 @@ def generate_launch_description():
 
     # pwm_node = Node(
     #     package='bluerov2common',
-    #     executable='pwmServices.py',
+    #     executable='pwmServicesTopTube.py',
     #     name='pwmServices',
     #     output='screen',
     #     parameters=[],
@@ -49,7 +49,7 @@ def generate_launch_description():
 
     # leakage_node = Node(
     #     package='bluerov2common',
-    #     executable='leakageSensor.py',
+    #     executable='leakageSensorTopTube.py',
     #     name='leakageSensor',
     #     output='screen',
     #     parameters=[],
@@ -57,15 +57,15 @@ def generate_launch_description():
     # )
     # ld.add_action(leakage_node)
 
-    video_node = Node(
-        package='bluerov2common',
-        executable='mjpeg_cam_python.py',
-        name='mjpeg_cam_python',
-        output='screen',
-        parameters=[],
-        arguments=[]
-    )
-    ld.add_action(video_node)
+    # video_node = Node(
+    #     package='bluerov2common',
+    #     executable='mjpeg_cam_python.py',
+    #     name='mjpeg_cam_python',
+    #     output='screen',
+    #     parameters=[],
+    #     arguments=[]
+    # )
+    # ld.add_action(video_node)
 
     # mavroute_node = Node(
     #     package='bluerov2common',

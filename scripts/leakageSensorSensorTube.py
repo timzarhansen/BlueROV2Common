@@ -15,7 +15,7 @@ class LeakPublisher(Node):
     def __init__(self):
 
         super().__init__('leakage_status')
-        self.publisher_ = self.create_publisher(LeakageDetection, 'leakage_status', 1)
+        self.publisher_ = self.create_publisher(LeakageDetection, 'leakage_status_sensor_tube', 1)
     # executes callback every timer_period seconds (change to appropriate value)
         timer_period = 1
         self.timer = self.create_timer(timer_period, self.leak_callback)

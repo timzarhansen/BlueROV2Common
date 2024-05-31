@@ -14,19 +14,19 @@ def generate_launch_description():
 
     # parameters_file_path = Path(get_package_share_directory('waterlinked_a50'), 'param', 'params.yaml')
 
-    # waterlinked_node = Node(
-    #     package='waterlinked_a50',
-    #     executable='dvl_node',
-    #     name='dvl_node',
-    #     output='screen',
-    #     parameters=[{"IP": "10.42.0.211"},
-    #                 {"port": "16171"},
-    #                 {"dvl_pos_topic_name": "position_estimate"},
-    #                 {"dvl_vel_topic_name": "velocity_estimate"}
-    #                 ],
-    #     arguments=[]
-    # )
-    # ld.add_action(waterlinked_node)
+    waterlinked_node = Node(
+        package='waterlinked_a50',
+        executable='dvl_node',
+        name='dvl_node',
+        output='screen',
+        parameters=[{"IP": "10.42.0.211"},
+                    {"port": "16171"},
+                    {"dvl_pos_topic_name": "position_estimate"},
+                    {"dvl_vel_topic_name": "velocity_estimate"}
+                    ],
+        arguments=[]
+    )
+    ld.add_action(waterlinked_node)
 
     ping_360_node = Node(
         package='ping360_sonar',
@@ -86,41 +86,52 @@ def generate_launch_description():
     )
     ld.add_action(imu_node)
 
-    # ekf_node = Node(
-    #     package='bluerov2common',
-    #     executable='ekfNode',
-    #     name='ekfNode',
-    #     output='screen',
-    #     parameters=[],
-    #     arguments=[]
-    # )
-    # ld.add_action(ekf_node)
-
-    # baro_node = Node(
-    #     package='hardware',
-    #     executable='barometer',
-    #     name='barometer',
-    #     output='screen',
-    #     parameters=[],
-    #     arguments=[]
-    # )
-    # ld.add_action(baro_node)
-
-    tritech_node = Node(
-        package='micron_driver_ros',
-        executable='micron_driver_ros_node',
-        name='micron_driver_ros_node',
+    ekf_node = Node(
+        package='bluerov2common',
+        executable='ekfNode',
+        name='ekfNode',
         output='screen',
-        parameters=[{"/micron_driver/range_": 20.0},
-                    {"/micron_driver/velocity_of_sound_": 1500.0},
-                    {"/micron_driver/angle_step_size_": 8},
-                    {"/micron_driver/leftLimit_": 6400},
-                    {"/micron_driver/rightLimit_": 1},
-                    {"/micron_driver/port_": "/dev/ttyUSB2"}
-
-                    ],
+        parameters=[],
         arguments=[]
     )
+    ld.add_action(ekf_node)
 
-    ld.add_action(tritech_node)
+    baro_node = Node(
+        package='hardware',
+        executable='barometer',
+        name='barometer',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(baro_node)
+
+    control_node = Node(
+        package='bluerov2common',
+        executable='controllerbluerov2',
+        name='controllerbluerov2',
+        output='screen',
+        parameters=[],
+        arguments=[]
+    )
+    ld.add_action(control_node)
+
+
+    # tritech_node = Node(
+    #     package='micron_driver_ros',
+    #     executable='micron_driver_ros_node',
+    #     name='micron_driver_ros_node',
+    #     output='screen',
+    #     parameters=[{"/micron_driver/range_": 20.0},
+    #                 {"/micron_driver/velocity_of_sound_": 1500.0},
+    #                 {"/micron_driver/angle_step_size_": 8},
+    #                 {"/micron_driver/leftLimit_": 6400},
+    #                 {"/micron_driver/rightLimit_": 1},
+    #                 {"/micron_driver/port_": "/dev/ttyUSB2"}
+    #
+    #                 ],
+    #     arguments=[]
+    # )
+
+    # ld.add_action(tritech_node)
     return ld
